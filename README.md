@@ -7,11 +7,13 @@ It allows creating BP instances from C++ classes inherited from ```AAbstractMuse
 
 ```AAbstractMuseumArt```: For art objects. Supports dynamic texture loading from .jpg or .png, 
 auto scaling, and projection to the nearest wall (if ```bEnableProjection``` is enabled).
+
 ```AAbstractMuseumText```: For text objects (can be loaded from files or edited directly in the editor).
+
 ```AAbstractMuseumItem```: For 3D objects.
 
 # Installation
- ```git clone ``` to Plugins folder
+ ```git clone``` to Plugins folder.
 
 Built for Unreal Engine 5.5.4
 
