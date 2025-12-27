@@ -1,5 +1,5 @@
 # AbstractMuseum
-An Unreal Engine plugin for simplify the creation of virtual museum for Unreal users.
+An Unreal Engine plugin that simplifies creating virtual museums and exhibitions for Unreal users.
 It allows creating BP instances from C++ classes inherited from ```AAbstractMuseumActor``` and placing them on the map.
 
 # Main classes to save and customize data
