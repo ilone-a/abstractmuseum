@@ -17,5 +17,6 @@ auto scaling, and projection to the nearest wall (if ```bEnableProjection``` is 
 
 Built for Unreal Engine 5.5.4
 
-
+# How to use
+https://youtu.be/9CmAXXqsyq0?si=Cf0NPPePRXFJhk_M
 
