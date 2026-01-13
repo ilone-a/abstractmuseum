@@ -214,23 +214,37 @@ void FMuseumArtCustomization::OnShowDefaultsChanged(IDetailLayoutBuilder* Detail
 
 void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 {
-	if (TargetArt)
+	if (!TargetArt)
+		return;
+
+	const FString FullPath = FPaths::ConvertRelativePathToFull(PickedPath);
+
+	TargetArt->Modify(); // save changes
+	TargetArt->LocalFilePath = FullPath;
+	TargetArt->MarkPackageDirty();
+
+	FString Hash = TargetArt->GetHash();
+	if (FAbstractMuseumFileHelper::IsFileChanged(FullPath, Hash))
 	{
-		FString hash = TargetArt->GetHash();
-		if (FAbstractMuseumFileHelper::IsFileChanged(PickedPath, hash))
+		TargetArt->LoadedTexture =
+			FAbstractMuseumFileHelper::LoadTextureFromDisk(FullPath, TargetArt->GetHash());
+
+		if (TargetArt->LoadedTexture)
 		{
-
-			TargetArt->LoadedTexture = FAbstractMuseumFileHelper::LoadTextureFromDisk(PickedPath, TargetArt->GetHash());
-
-			if (TargetArt->LoadedTexture)
+			if (!TargetArt->ArtMaterial)
 			{
-				if (!TargetArt->ArtMaterial) TargetArt->CreateDynamicMaterial();
-				TargetArt->ApplyTexture();
+				TargetArt->CreateDynamicMaterial();
+			}
+
+			TargetArt->ApplyTexture();
+
+			if (TargetArt->LoadedTexture->GetSizeX() > 0 &&
+				TargetArt->LoadedTexture->GetSizeY() > 0)
+			{
 				TargetArt->ScaleMeshes();
 			}
 		}
 	}
-
 }
 
 FString FMuseumArtCustomization::GetSelectedFilePath() const

@@ -200,50 +200,53 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 void AAbstractMuseumArt::BeginPlay()
 {
 	Super::BeginPlay();
-	if (!ArtMaterialStruct)
+	SetFrameVisible(false);
+	// check init
+	if (!ArtMaterialStruct || !ArtMaterialStruct->BaseMaterial || !Plane)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ArtMaterialStruct is NULL in OnConstruction"));
+		UE_LOG(LogTemp, Error, TEXT("ArtMaterialStruct/BaseMaterial/Plane not set"));
 		return;
 	}
 
-	if (!ArtMaterialStruct->BaseMaterial)
-	{
-		UE_LOG(LogTemp, Error, TEXT("BaseMaterial in ArtMaterialStruct is NULL"));
-		return;
-	}
-	if (!Plane)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Plane is NULL in OnConstruction"));
-		return;
-	}
 	CreateDynamicMaterial();
-	if (!LoadedTexture)
+
+	// loading texture
+	if (!LoadedTexture && !LocalFilePath.IsEmpty())
 	{
-		if (FAbstractMuseumFileHelper::IsFileChanged(LocalFilePath, GetHash()))
-		{
-			LoadedTexture = FAbstractMuseumFileHelper::LoadTextureFromDisk(LocalFilePath, GetHash());
-		}
+		LoadedTexture = FAbstractMuseumFileHelper::LoadTextureFromDisk(LocalFilePath, GetHash());
+
 	}
+
+	// apply it
 	if (LoadedTexture && ArtMaterial)
 	{
 		ApplyTexture();
 		ScaleMeshes();
 	}
 
+	// frame
+	if (Frame)
+	{
+		Frame->SetVisibility(bIsFrameVisible);
+		if (CachedFrameCubeMesh)
+		{
+			Frame->SetStaticMesh(CachedFrameCubeMesh);
+		}
+	}
+
+	// camera settings
 	if (AMCamera)
 	{
 		AMCamera->SetWorldLocation(SavedCameraLocation);
 	}
 
+	// PlayerController
 	PC = GetWorld()->GetFirstPlayerController();
-	if (!PC) return;
-
-	PlayerPawn = PC->GetPawn();
-	if (!PlayerPawn) return;
-
-	OriginalViewTarget = PC->GetViewTarget();
-	//box collision
-
+	if (PC)
+	{
+		PlayerPawn = PC->GetPawn();
+		OriginalViewTarget = PC->GetViewTarget();
+	}
 }
 
 //-------Frame settings-----
