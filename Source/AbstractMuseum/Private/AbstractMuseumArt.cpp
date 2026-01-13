@@ -121,16 +121,15 @@ AAbstractMuseumArt::AAbstractMuseumArt()
 	Frame = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Frame"));
 	check(Frame);
 	Frame->SetupAttachment(Origin);
-	CreateDynamicFrameMaterial();
+	FrameBaseMaterial = nullptr;
 
-	if (Frame && CachedFrameCubeMesh)
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> GridMatFinder(
+		TEXT("/AbstractMuseum/Materials/FrameMaterial.FrameMaterial"));
+	if (GridMatFinder.Succeeded())
 	{
-		Frame->SetStaticMesh(CachedFrameCubeMesh);
+		FrameBaseMaterial = GridMatFinder.Object;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to load default Cube mesh for Frame"));
-	}
+
 
 	ProjectionDecal = CreateDefaultSubobject<UDecalComponent>("ProjectionDecal");
 	check(ProjectionDecal);
@@ -169,6 +168,18 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 			LoadedTexture = FAbstractMuseumFileHelper::LoadTextureFromDisk(LocalFilePath, GetHash());
 		}
 	}
+
+	CreateDynamicFrameMaterial();
+
+	if (Frame && CachedFrameCubeMesh)
+	{
+		Frame->SetStaticMesh(CachedFrameCubeMesh);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load default Cube mesh for Frame"));
+	}
+
 	if (LoadedTexture && ArtMaterial)
 	{
 		ApplyTexture();
@@ -238,19 +249,10 @@ void AAbstractMuseumArt::BeginPlay()
 //-------Frame settings-----
 void AAbstractMuseumArt::CreateDynamicFrameMaterial()
 {
-	UMaterialInterface* BaseMatFrame = nullptr;
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> GridMatFinder(
-		TEXT("/AbstractMuseum/Materials/FrameMaterial.FrameMaterial"));
-	if (GridMatFinder.Succeeded())
+	if (FrameBaseMaterial && !HasAnyFlags(RF_ClassDefaultObject))
 	{
-		BaseMatFrame = GridMatFinder.Object;
-	}
-
-
-	if (BaseMatFrame)
-	{
-		FrameMaterial = UMaterialInstanceDynamic::Create(BaseMatFrame, this);
+		FrameMaterial = UMaterialInstanceDynamic::Create(FrameBaseMaterial, this);
 		if (FrameMaterial && Frame)
 		{
 			Frame->SetMaterial(0, FrameMaterial);
@@ -391,7 +393,7 @@ void AAbstractMuseumArt::UpdateLinetrace()
 //-------Art texture-----
 void AAbstractMuseumArt::CreateDynamicMaterial()
 {
-	if (ArtMaterialStruct && (ArtMaterialStruct->BaseMaterial != nullptr))
+	if (ArtMaterialStruct && (ArtMaterialStruct->BaseMaterial != nullptr) && !HasAnyFlags(RF_ClassDefaultObject))
 	{
 		ArtMaterial = UMaterialInstanceDynamic::Create(ArtMaterialStruct->BaseMaterial, this);
 		if (ArtMaterial)
