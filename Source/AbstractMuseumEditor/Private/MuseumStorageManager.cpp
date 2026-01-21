@@ -125,9 +125,8 @@ UDataTable* FMuseumStorageManager::CreateDataTable(const FString& FolderPath, co
 
 UDataTable* FMuseumStorageManager::GetOrCreateDataTable(const FString& FolderPath, const FString& AssetName)
 {
-	
 	if (UDataTable* Existing = GetDataTable(FolderPath, AssetName)) return Existing;
-	else return nullptr;
+	else return CreateDataTable(FolderPath, AssetName);
 }
 
 #endif

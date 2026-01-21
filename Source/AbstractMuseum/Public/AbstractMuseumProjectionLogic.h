@@ -35,7 +35,6 @@ protected:
 
 #endif
 	
-
 private:
 
 #if WITH_EDITOR

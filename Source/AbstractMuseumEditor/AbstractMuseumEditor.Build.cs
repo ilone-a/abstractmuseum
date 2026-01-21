@@ -30,6 +30,7 @@ public class AbstractMuseumEditor : ModuleRules
             "Slate",
             "SlateCore",
             "PropertyEditor",
+            "AssetRegistry",
             "InputCore",
             "EditorStyle",
             "AssetTools",

@@ -1,6 +1,8 @@
 #include "AbstractMuseumEditorModule.h"
 #include "Modules/ModuleManager.h"
 #include "PropertyEditorModule.h"
+#include "Runtime/AssetRegistry/Public/AssetRegistry/AssetRegistryModule.h"
+#include "../Public/MuseumStorageManager.h"
 #include "../Public/AbstractMuseumArt.h"
 #include "../Public/AbstractMuseumItem.h"
 #include "../Public/AbstractMuseumText.h"
@@ -18,6 +20,20 @@ IMPLEMENT_MODULE(FAbstractMuseumEditorModule, AbstractMuseumEditor)
 void FAbstractMuseumEditorModule::StartupModule()
 {
     RegisterCustomizations();
+
+    FAssetRegistryModule& ARM =
+        FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+
+    ARM.Get().OnFilesLoaded().AddLambda([]()
+        {
+            FMuseumStorageManager::RebuildAMStorage();
+        });
+    FEditorDelegates::OnMapOpened.AddLambda(
+        [](const FString&, bool)
+        {
+            FMuseumStorageManager::RebuildAMShow();
+        }
+    );
 }
 
 void FAbstractMuseumEditorModule::ShutdownModule()

@@ -24,7 +24,6 @@ AAbstractMuseumProjectionLogic::AAbstractMuseumProjectionLogic()
 #if WITH_EDITOR
 	bEditorHookRegistered = false;
 #endif
-	PrimaryActorTick.bCanEverTick = true;
 }
 
 
@@ -42,10 +41,11 @@ AAbstractMuseumProjectionLogic* AAbstractMuseumProjectionLogic::Get(UWorld* Worl
 
 void AAbstractMuseumProjectionLogic::RegisterEditorSelect()
 {
-	if (GEditor)
+	if (!GEditor || bEditorHookRegistered) return;
+	if (USelection* Sl = GEditor->GetSelectedActors())
 	{
+		Sl->SelectObjectEvent.AddUObject(this, &AAbstractMuseumProjectionLogic::OnEditorSelectionChanged);
 		bEditorHookRegistered = true;
-		GEditor->GetSelectedActors()->SelectObjectEvent.AddUObject(this, &AAbstractMuseumProjectionLogic::OnEditorSelectionChanged);
 	}
 }
 
