@@ -1,6 +1,7 @@
 #include "../Public/MuseumStorageManager.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+#include "AbstractMuseumActor.h"
 
 #include "Runtime/AssetRegistry/Public/AssetRegistry/AssetRegistryModule.h"
 

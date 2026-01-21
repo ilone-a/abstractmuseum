@@ -37,24 +37,6 @@ AAbstractMuseumProjectionLogic* AAbstractMuseumProjectionLogic::Get(UWorld* Worl
 	return nullptr;
 }
 
-void AAbstractMuseumProjectionLogic::CollectAbstractMuseumActors()
-{
-	AMActors.Empty();
-
-	TArray<AActor*> MActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAbstractMuseumActor::StaticClass(), MActors);
-
-	for (AActor* Actor : MActors)
-	{
-		if (AAbstractMuseumActor* Art = Cast<AAbstractMuseumActor>(Actor))
-		{
-			AMActors.Add(Art);
-		}
-	}
-#if WITH_EDITOR
-	RegisterEditorSelect();
-#endif
-}
 
 #if WITH_EDITOR
 
@@ -145,7 +127,6 @@ void AAbstractMuseumProjectionLogic::OnEditorSelectionChanged(UObject* NewSelect
 void AAbstractMuseumProjectionLogic::BeginPlay()
 {
 	Super::BeginPlay();
-	CollectAbstractMuseumActors();
 }
 
 
@@ -165,5 +146,7 @@ void AAbstractMuseumProjectionLogic::EndPlay(const EEndPlayReason::Type EndPlayR
 void AAbstractMuseumProjectionLogic::PostLoad()
 {
 	Super::PostLoad();
-	CollectAbstractMuseumActors();
+#if WITH_EDITOR
+	RegisterEditorSelect();
+#endif
 }

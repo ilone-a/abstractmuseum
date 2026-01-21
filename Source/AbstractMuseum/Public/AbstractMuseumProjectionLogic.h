@@ -37,9 +37,6 @@ protected:
 	
 
 private:
-	//Abstract Museum actor child array
-	UPROPERTY() TArray <AAbstractMuseumActor*> AMActors;
-	void CollectAbstractMuseumActors();
 
 #if WITH_EDITOR
 	void RegisterEditorSelect();

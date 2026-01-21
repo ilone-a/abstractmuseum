@@ -10,12 +10,12 @@ struct FAMDataTableRowEntry : public FTableRowBase
 {
 	GENERATED_BODY()
 
-UPROPERTY(EditAnywhere, BlueprintReadOnly)
+UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
 FName DisplayName;
 
-UPROPERTY(EditAnywhere, BlueprintReadOnly)
+UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
 TSubclassOf<AAbstractMuseumActor> ActorClass;
 
-UPROPERTY(EditAnywhere, BlueprintReadOnly)
+UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
 FString AssetPath;
 };
