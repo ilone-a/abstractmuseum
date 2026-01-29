@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "ArtInteractInterface.h"
+#include "SemanticNodeComponent.h"
 #include "AbstractMuseumActor.generated.h"
 
 // Other base structs
@@ -73,6 +74,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
 	TObjectPtr<UDecalComponent> ProjectionDecal;
 
+	//info
+	UPROPERTY(EditAnywhere, Category = "Info")
+	UAMInfoComponent* InfoComponent;
 // camera zoom logic
 	UPROPERTY(VisibleAnywhere, Category = "Default")
 	UCameraComponent* AMCamera;

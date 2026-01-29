@@ -26,7 +26,7 @@ void FMuseumArtCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuild
 	TargetArt = Cast<AAbstractMuseumArt>(Objects[0].Get());
 	if (!TargetArt) return;
 	CachedDetailBuilder = &DetailBuilder;
-	AlwaysVisible = { "Texture Loader", "View Options", "Projection", "Frame" };
+	AlwaysVisible = { "Texture Loader", "View Options", "Projection", "Frame", "Info"};
 
 	//----Hide all categories except our AlwaysVisible list---
 	DetailBuilder.GetCategoryNames(AllCategories);

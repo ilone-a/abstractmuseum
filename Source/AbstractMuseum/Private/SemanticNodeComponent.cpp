@@ -1,6 +1,6 @@
 #include "SemanticNodeComponent.h"
 
-USemanticNodeComponent::USemanticNodeComponent()
+UAMInfoComponent::UAMInfoComponent()
 {
 
  

@@ -4,27 +4,50 @@
 #include "SemanticNodeComponent.generated.h"
 //
 
-// Semantic Node class: data storage of the virtual museum art instance.
-// Stores unique id, year, tags and ids connected nodes, 
-// calculates an array of connected nodes.
+// data storage of the virtual museum art instance.
+
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class ABSTRACTMUSEUM_API USemanticNodeComponent : public UActorComponent {
+class ABSTRACTMUSEUM_API UAMInfoComponent : public UActorComponent {
 	GENERATED_BODY()
 public:
-	USemanticNodeComponent();
-	UPROPERTY(EditAnywhere, Category = "Semantic")
-	FName NodeID;
+	UAMInfoComponent();
 
-	UPROPERTY(EditAnywhere, Category = "Semantic")
-	int Year;
+	UPROPERTY(BlueprintReadOnly, Category = "Default")
+	FName InventoryID;
+	UPROPERTY(EditAnywhere, Category = "Default")
+	FName Title;
+	//enum ObjectType (enum: Painting, Sculpture, Object, etc.)
+	UPROPERTY(EditAnywhere, Category = "Default")
+	int Date;
+	UPROPERTY(EditAnywhere, Category = "Default")
+	FString Note;
+};
 
-	UPROPERTY(EditAnywhere, Category = "Semantic")
-	TArray<FName>SemanticTags;
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class ABSTRACTMUSEUM_API UAMShowComponent : public UActorComponent {
+	GENERATED_BODY()
+public:
+	UAMShowComponent() {};
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Semantic")
-	TArray<FName>ConnectedNodeIDs;
-	// runtime-data
-	TArray<TWeakObjectPtr<USemanticNodeComponent>> ConnectedNodes;
+	UPROPERTY(BlueprintReadOnly, Category = "Show")
+	FTransform ActorInGalleryTransform;
+	//todo: create entity for the room in galery
+	//not a real fstring, must be pointer
+	UPROPERTY(EditAnywhere, Category = "Show")
+	FString LinkToGallery;
+};
 
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class ABSTRACTMUSEUM_API UAMStorageComponent : public UActorComponent {
+	GENERATED_BODY()
+public:
+	UAMStorageComponent() {};
+
+	UPROPERTY(BlueprintReadOnly, Category = "Show")
+	FTransform ActorInGalleryTransform;
+	//todo: create entity for the room in galery
+	//not a real fstring, must be pointer
+	UPROPERTY(EditAnywhere, Category = "Show")
+	FString LinkToGallery;
 };
