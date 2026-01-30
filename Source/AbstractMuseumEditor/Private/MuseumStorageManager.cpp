@@ -6,7 +6,7 @@
 #include "AbstractMuseumItem.h"
 #include "Misc/Paths.h"
 #include "Runtime/AssetRegistry/Public/AssetRegistry/AssetRegistryModule.h"
-
+#include "FileHelpers.h"
 
 
 #if WITH_EDITOR
@@ -21,7 +21,6 @@ void FMuseumStorageManager::RebuildAMShow()
 		UDataTable* Table = GetOrCreateDataTable("/Game/Data", "Show");
 		if (!Table) return;
 
-		Table->Modify();
 		Table->EmptyTable();
 
 		TArray<AActor*> Found;
@@ -43,7 +42,10 @@ void FMuseumStorageManager::RebuildAMShow()
 			
 			Table->AddRow(Row.DisplayName, Row);
 		}
-
+//Save data table
+		Table->MarkPackageDirty();
+		UPackage* Package = Table->GetOutermost();
+		FEditorFileUtils::PromptForCheckoutAndSave({ Package }, true, false);
 }
 // assets from AssetRegistry
 void FMuseumStorageManager::RebuildAMStorage()
@@ -52,7 +54,7 @@ void FMuseumStorageManager::RebuildAMStorage()
 	if (!Table)
 		return;
 
-	Table->Modify();
+	//Table->Modify();
 	Table->EmptyTable();
 
 	FAssetRegistryModule& ARM =
@@ -175,8 +177,23 @@ UDataTable* FMuseumStorageManager::CreateDataTable(const FString& FolderPath, co
 
 UDataTable* FMuseumStorageManager::GetOrCreateDataTable(const FString& FolderPath, const FString& AssetName)
 {
-	if (UDataTable* Existing = GetDataTable(FolderPath, AssetName)) return Existing;
-	else return CreateDataTable(FolderPath, AssetName);
+	// Try to get created data table
+	if (UDataTable* Existing = GetDataTable(FolderPath, AssetName))
+	{
+		return Existing;
+	}
+
+	// Or create new one
+	UDataTable* NewTable = CreateDataTable(FolderPath, AssetName);
+	if (!NewTable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to create DataTable %s/%s"), *FolderPath, *AssetName);
+		return nullptr;
+	}
+
+	FAssetRegistryModule::AssetCreated(NewTable);
+
+	return NewTable;
 }
 
 UClass* FMuseumStorageManager::GetRootCppClassFromBP(const FAssetData& Asset)

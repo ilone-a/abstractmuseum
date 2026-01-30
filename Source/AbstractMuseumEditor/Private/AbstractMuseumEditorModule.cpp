@@ -32,6 +32,7 @@ void FAbstractMuseumEditorModule::StartupModule()
         [](const FString&, bool)
         {
             FMuseumStorageManager::RebuildAMShow();
+            //todo:rebuild logic
         }
     );
 }
