@@ -76,7 +76,7 @@ protected:
 
 	//info
 	UPROPERTY(EditAnywhere, Category = "Info")
-	UAMInfoComponent* InfoComponent;
+	FAMInfoComponent InfoComponent;
 // camera zoom logic
 	UPROPERTY(VisibleAnywhere, Category = "Default")
 	UCameraComponent* AMCamera;

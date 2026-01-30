@@ -90,8 +90,7 @@ AAbstractMuseumArt::AAbstractMuseumArt()
 	AMCamera->SetupAttachment(RootComponent);
 
 	if (AMCamera) { AMCamera->SetupAttachment(Origin); }
-	//info
-	InfoComponent = CreateDefaultSubobject<UAMInfoComponent>("InfoComponent");
+
 
 	//Art texture storage and placement
 	Plane = CreateDefaultSubobject<UStaticMeshComponent>("Plane");

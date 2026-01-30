@@ -1,7 +1,9 @@
-#include "../Public/MuseumStorageManager.h"
+﻿#include "../Public/MuseumStorageManager.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
-#include "AbstractMuseumActor.h"
+#include "AbstractMuseumArt.h"
+#include "AbstractMuseumText.h"
+#include "AbstractMuseumItem.h"
 #include "Misc/Paths.h"
 #include "Runtime/AssetRegistry/Public/AssetRegistry/AssetRegistryModule.h"
 
@@ -36,9 +38,9 @@ void FMuseumStorageManager::RebuildAMShow()
 
 			FAMDataTableRowEntry Row;
 			Row.DisplayName = AM->GetFName();
-			Row.ActorClass = AM->GetClass();
+			Row.AssetType = ResolveMuseumAssetType(AM->GetClass());
 			Row.AssetPath = AM->GetPathName();
-
+			
 			Table->AddRow(Row.DisplayName, Row);
 		}
 
@@ -46,10 +48,9 @@ void FMuseumStorageManager::RebuildAMShow()
 // assets from AssetRegistry
 void FMuseumStorageManager::RebuildAMStorage()
 {
-	//TODO remove hardcode
-
 	UDataTable* Table = GetOrCreateDataTable("/Game/Data", "Storage");
-	if (!Table) return;
+	if (!Table)
+		return;
 
 	Table->Modify();
 	Table->EmptyTable();
@@ -58,14 +59,9 @@ void FMuseumStorageManager::RebuildAMStorage()
 		FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	IAssetRegistry& Registry = ARM.Get();
 
-	// 1. Collect all child classes of AbstractMuseumActor
-	TArray<FTopLevelAssetPath> BaseClasses;
-	BaseClasses.Add(AAbstractMuseumActor::StaticClass()->GetClassPathName());
+	const TSet<FTopLevelAssetPath> MuseumClasses =
+		GetAllMuseumDerivedClasses();
 
-	TSet<FTopLevelAssetPath> DerivedClasses;
-	Registry.GetDerivedClassNames(BaseClasses, {}, DerivedClasses);
-
-	// 2. Get all BP
 	TArray<FAssetData> Assets;
 	Registry.GetAssetsByClass(
 		UBlueprint::StaticClass()->GetClassPathName(),
@@ -75,53 +71,68 @@ void FMuseumStorageManager::RebuildAMStorage()
 
 	for (const FAssetData& Asset : Assets)
 	{
-		const FString GeneratedClassPath =
-			Asset.GetTagValueRef<FString>("GeneratedClass");
-
-		if (GeneratedClassPath.IsEmpty())
+		if (!IsMuseumAsset(Asset, MuseumClasses))
 			continue;
 
-		const FString CleanClassPath =
-			FPackageName::ExportTextPathToObjectPath(GeneratedClassPath);
-
-		const FTopLevelAssetPath ClassPath(CleanClassPath);
-		// 3. Check hierarchy
-		if (!DerivedClasses.Contains(ClassPath))
-			continue;
-		UClass* BPClass = LoadObject<UClass>(nullptr, *CleanClassPath);
-		if (!BPClass)
-			continue;
-
-		UClass* It = BPClass;
-		UClass* FoundCppParent = nullptr;
-
-		while (It)
-		{
-			// first C++ native parent class
-			if (It->ClassGeneratedBy == nullptr)
-			{
-				FoundCppParent = It;
-				break;
-			}
-
-			It = It->GetSuperClass();
-		}
-
-		if (!FoundCppParent)
-			continue;
-
-		if (!FoundCppParent->IsChildOf(AAbstractMuseumActor::StaticClass()))
+		UClass* RootCppClass = GetRootCppClassFromBP(Asset);
+		if (!RootCppClass)
 			continue;
 
 		FAMDataTableRowEntry Row;
 		Row.DisplayName = Asset.AssetName;
-		Row.ActorClass = FoundCppParent;
-		//Row.ActorClass = nullptr; 
+		Row.AssetType = ResolveMuseumAssetType(RootCppClass);
 		Row.AssetPath = Asset.ObjectPath.ToString();
 
 		Table->AddRow(Row.DisplayName, Row);
 	}
+}
+ bool FMuseumStorageManager::IsMuseumAsset(const FAssetData& Asset, const TSet<FTopLevelAssetPath>& MuseumDerivedClasses)
+{
+	 const FString GeneratedClassPath =
+		 Asset.GetTagValueRef<FString>("GeneratedClass");
 
+	 if (GeneratedClassPath.IsEmpty())
+		 return false;
+
+	 const FString CleanPath =
+		 FPackageName::ExportTextPathToObjectPath(GeneratedClassPath);
+
+	 return MuseumDerivedClasses.Contains(
+		 FTopLevelAssetPath(CleanPath));
+}
+
+ TSet<FTopLevelAssetPath> FMuseumStorageManager::GetAllMuseumDerivedClasses()
+ {
+	 FAssetRegistryModule& ARM =
+		 FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+
+	 TArray<FTopLevelAssetPath> Base;
+	 Base.Add(AAbstractMuseumActor::StaticClass()->GetClassPathName());
+
+	 TSet<FTopLevelAssetPath> Derived;
+	 TSet<FTopLevelAssetPath> Excluded;
+
+	 ARM.Get().GetDerivedClassNames(Base, Excluded, Derived);
+
+	 return Derived;
+ }
+
+
+
+EAMAssetType FMuseumStorageManager::ResolveMuseumAssetType(UClass* RootCppClass)
+{
+	check(RootCppClass);
+
+	if (RootCppClass->IsChildOf(AAbstractMuseumArt::StaticClass()))
+		return EAMAssetType::Art;
+
+	if (RootCppClass->IsChildOf(AAbstractMuseumText::StaticClass()))
+		return EAMAssetType::Text;
+
+	if (RootCppClass->IsChildOf(AAbstractMuseumItem::StaticClass()))
+		return EAMAssetType::Item;
+
+	return EAMAssetType::Error;
 }
 
 UDataTable* FMuseumStorageManager::GetDataTable(const FString& FolderPath, const FString& AssetName)
@@ -166,6 +177,30 @@ UDataTable* FMuseumStorageManager::GetOrCreateDataTable(const FString& FolderPat
 {
 	if (UDataTable* Existing = GetDataTable(FolderPath, AssetName)) return Existing;
 	else return CreateDataTable(FolderPath, AssetName);
+}
+
+UClass* FMuseumStorageManager::GetRootCppClassFromBP(const FAssetData& Asset)
+{
+	const FString GeneratedClassPath =
+		Asset.GetTagValueRef<FString>("GeneratedClass");
+
+	if (GeneratedClassPath.IsEmpty())
+		return nullptr;
+
+	const FString CleanPath =
+		FPackageName::ExportTextPathToObjectPath(GeneratedClassPath);
+
+	UClass* BPClass = LoadObject<UClass>(nullptr, *CleanPath);
+	if (!BPClass)
+		return nullptr;
+
+	for (UClass* It = BPClass; It; It = It->GetSuperClass())
+	{
+		if (It->ClassGeneratedBy == nullptr)
+			return It;
+	}
+
+	return nullptr;
 }
 
 #endif

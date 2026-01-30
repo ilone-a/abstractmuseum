@@ -7,11 +7,9 @@
 // data storage of the virtual museum art instance.
 
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class ABSTRACTMUSEUM_API UAMInfoComponent : public UActorComponent {
+USTRUCT(BlueprintType)
+struct FAMInfoComponent {
 	GENERATED_BODY()
-public:
-	UAMInfoComponent();
 
 	UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FName InventoryID;
