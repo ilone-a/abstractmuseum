@@ -5,6 +5,13 @@
 #include "Modules/ModuleManager.h"
 #include "Engine/Texture2D.h"
 #include "TextureResource.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "UObject/Package.h"
+#include "Factories/TextureFactory.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "UObject/SavePackage.h"
+#include "Misc/PackageName.h"
+#include "Editor.h"
 
 UTexture2D* FAbstractMuseumFileHelper::LoadTextureFromDisk(const FString& FilePath, FString& OutFileHash)
 {
@@ -102,6 +109,166 @@ FString FAbstractMuseumFileHelper::LoadTextFileFromDisk(const FString& FilePath,
 	FFileHelper::BufferToString(FileContents, FileData.GetData(), FileData.Num());
 
 	return FileContents;
+}
+UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& SourceFilePath, const FString& AssetName, const FString& PackagePath)
+{
+	if (!FPaths::FileExists(SourceFilePath))
+		return nullptr;
+
+	const FString FullPackagePath = PackagePath + TEXT("/") + AssetName;
+
+	// если уже существует Ч возвращаем
+	if (UTexture2D* Existing = LoadObject<UTexture2D>(nullptr, *FullPackagePath))
+		return Existing;
+
+	UPackage* Package = CreatePackage(*FullPackagePath);
+	if (!Package)
+		return nullptr;
+
+	Package->FullyLoad();
+
+	UTextureFactory* Factory = NewObject<UTextureFactory>();
+	Factory->AddToRoot(); // защита от GC
+	Factory->SuppressImportOverwriteDialog();
+
+	Factory->bCreateMaterial = false;
+	//Factory->bCreateMaterialInstance = false;
+	Factory->bEditorImport = true;
+
+	const uint8* Buffer = nullptr;
+	TArray<uint8> FileData;
+
+	if (!FFileHelper::LoadFileToArray(FileData, *SourceFilePath))
+		return nullptr;
+
+	Buffer = FileData.GetData();
+
+	UTexture2D* ImportedTexture = Cast<UTexture2D>(
+		Factory->FactoryCreateBinary(
+			UTexture2D::StaticClass(),
+			Package,
+			*AssetName,
+			RF_Public | RF_Standalone,
+			nullptr,
+			*FPaths::GetExtension(SourceFilePath),
+			Buffer,
+			Buffer + FileData.Num(),
+			GWarn
+		)
+	);
+
+	if (!ImportedTexture)
+		return nullptr;
+
+	// регистраци€
+	FAssetRegistryModule::AssetCreated(ImportedTexture);
+	ImportedTexture->MarkPackageDirty();
+	Package->MarkPackageDirty();
+
+	const FString PackageFileName =
+		FPackageName::LongPackageNameToFilename(
+			FullPackagePath,
+			FPackageName::GetAssetPackageExtension()
+		);
+
+	FSavePackageArgs SaveArgs;
+	SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+
+	UPackage::SavePackage(
+		Package,
+		ImportedTexture,
+		*PackageFileName,
+		SaveArgs
+	);
+
+	Factory->RemoveFromRoot();
+
+	return ImportedTexture;
+}
+UTexture2D* FAbstractMuseumFileHelper::SaveTextureAsAsset(UTexture2D* SourceTexture, const FString& AssetName, const FString& PackagePath)
+{
+	if (!SourceTexture)
+		return nullptr;
+
+	const FString FullPackagePath = PackagePath + TEXT("/") + AssetName;
+
+	// если уже существует Ч возвращаем
+	if (UTexture2D* Existing = LoadObject<UTexture2D>(nullptr, *FullPackagePath))
+		return Existing;
+
+	UPackage* Package = CreatePackage(*FullPackagePath);
+	if (!Package)
+		return nullptr;
+
+	Package->FullyLoad();
+
+	// создаЄм новую текстуру как ассет
+	UTexture2D* NewTexture = NewObject<UTexture2D>(
+		Package,
+		*AssetName,
+		RF_Public | RF_Standalone
+	);
+
+	// создаЄм платформенные данные
+	FTexturePlatformData* SrcData = SourceTexture->GetPlatformData();
+	if (!SrcData || SrcData->Mips.Num() == 0)
+		return nullptr;
+
+	const int32 Width = SrcData->SizeX;
+	const int32 Height = SrcData->SizeY;
+	const EPixelFormat Format = SrcData->PixelFormat;
+
+	NewTexture->SetPlatformData(new FTexturePlatformData());
+	FTexturePlatformData* DstData = NewTexture->GetPlatformData();
+
+	DstData->SizeX = Width;
+	DstData->SizeY = Height;
+	DstData->PixelFormat = Format;
+
+	// создаЄм mip
+	FTexture2DMipMap* Mip = new FTexture2DMipMap();
+	DstData->Mips.Add(Mip);
+
+	Mip->SizeX = Width;
+	Mip->SizeY = Height;
+
+	const int64 DataSize = SrcData->Mips[0].BulkData.GetBulkDataSize();
+
+	void* SrcPtr = SrcData->Mips[0].BulkData.Lock(LOCK_READ_ONLY);
+
+	Mip->BulkData.Lock(LOCK_READ_WRITE);
+	void* DstPtr = Mip->BulkData.Realloc(DataSize);
+
+	FMemory::Memcpy(DstPtr, SrcPtr, DataSize);
+
+	Mip->BulkData.Unlock();
+	SrcData->Mips[0].BulkData.Unlock();
+
+	// базовые настройки
+	NewTexture->SRGB = true;
+	NewTexture->CompressionSettings = TextureCompressionSettings::TC_Default;
+	NewTexture->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
+
+	NewTexture->UpdateResource();
+
+	// регистрируем
+	FAssetRegistryModule::AssetCreated(NewTexture);
+	NewTexture->MarkPackageDirty();
+
+	const FString PackageFileName =
+		FPackageName::LongPackageNameToFilename(
+			FullPackagePath,
+			FPackageName::GetAssetPackageExtension()
+		);
+
+	UPackage::SavePackage(
+		Package,
+		NewTexture,
+		RF_Public | RF_Standalone,
+		*PackageFileName
+	);
+
+	return NewTexture;
 }
 //--Item is loaded from assets----
 

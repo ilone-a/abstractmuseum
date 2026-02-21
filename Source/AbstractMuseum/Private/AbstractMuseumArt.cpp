@@ -23,6 +23,11 @@
 #include "Interfaces/IPluginManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
+#include "AssetToolsModule.h"
+#include "UObject/Package.h"
+#include "UObject/SavePackage.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/FileHelper.h"
 #include "Modules/ModuleManager.h"
@@ -160,14 +165,10 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 		UE_LOG(LogTemp, Error, TEXT("Plane is NULL in OnConstruction"));
 		return;
 	}
-	CreateDynamicMaterial();
-
-	if (!LoadedTexture)
+	if (ArtMaterialAsset)
 	{
-		if (FAbstractMuseumFileHelper::IsFileChanged(LocalFilePath, GetHash()))
-		{
-			LoadedTexture = FAbstractMuseumFileHelper::LoadTextureFromDisk(LocalFilePath, GetHash());
-		}
+		Plane->SetMaterial(0, ArtMaterialAsset);
+		ScaleMeshes();
 	}
 
 	CreateDynamicFrameMaterial();
@@ -181,10 +182,9 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 		UE_LOG(LogTemp, Error, TEXT("Failed to load default Cube mesh for Frame"));
 	}
 
-	if (LoadedTexture && ArtMaterial)
+	//if (LoadedTexture )
 	{
-		ApplyTexture();
-		ScaleMeshes();
+
 
 #if WITH_EDITOR
 		CalculateCameraPositionEditor();
@@ -209,21 +209,14 @@ void AAbstractMuseumArt::BeginPlay()
 		return;
 	}
 
-	CreateDynamicMaterial();
-
-	// loading texture
-	if (!LoadedTexture && !LocalFilePath.IsEmpty())
+	//CreateDynamicMaterial();
+	if (ArtMaterialAsset)
 	{
-		LoadedTexture = FAbstractMuseumFileHelper::LoadTextureFromDisk(LocalFilePath, GetHash());
-
-	}
-
-	// apply it
-	if (LoadedTexture && ArtMaterial)
-	{
-		ApplyTexture();
+		Plane->SetMaterial(0, ArtMaterialAsset);
 		ScaleMeshes();
 	}
+
+	
 
 	// frame
 	if (Frame)
@@ -267,6 +260,82 @@ void AAbstractMuseumArt::CreateDynamicFrameMaterial()
 		UE_LOG(LogTemp, Error, TEXT("CreateDynamicMaterial failed: no BaseMaterial and no fallback"));
 	}
 
+}
+
+UMaterialInstanceConstant* AAbstractMuseumArt::CreateOrGetMaterialInstanceAsset()
+{
+#if WITH_EDITOR
+	if (!ArtMaterialStruct || !ArtMaterialStruct->BaseMaterial)
+		return nullptr;
+
+	// Стабильное имя ассета из DataAsset
+	const FString BaseName = GetName();
+
+
+	const FString PackagePath = TEXT("/Game/AbstractMuseum/GeneratedMaterials");
+	const FString AssetName = FString::Printf(TEXT("MTL_%s"), *BaseName);
+	const FString FullPath = PackagePath + TEXT("/") + AssetName;
+
+	// Проверяем существующий ассет
+	const FString ObjectPath = FullPath + TEXT(".") + AssetName;
+	UMaterialInstanceConstant* ExistingMIC =
+		Cast<UMaterialInstanceConstant>(
+			StaticLoadObject(
+				UMaterialInstanceConstant::StaticClass(),
+				nullptr,
+				*ObjectPath
+			)
+		);
+
+	UMaterialInstanceConstant* MIC = ExistingMIC;
+
+	if (!MIC)
+	{
+		// Создаём пакет
+		UPackage* Package = CreatePackage(*FullPath);
+		if (!Package)
+			return nullptr;
+
+		Package->FullyLoad();
+
+		// Создаём новый ассет
+		MIC = NewObject<UMaterialInstanceConstant>(
+			Package,
+			*AssetName,
+			RF_Public | RF_Standalone
+		);
+
+		MIC->SetParentEditorOnly(ArtMaterialStruct->BaseMaterial);
+
+		// Регистрация в реестре
+		FAssetRegistryModule::AssetCreated(MIC);
+		MIC->MarkPackageDirty();
+
+		// Сохраняем пакет
+		const FString PackageFileName =
+			FPackageName::LongPackageNameToFilename(
+				FullPath,
+				FPackageName::GetAssetPackageExtension()
+			);
+
+		FSavePackageArgs SaveArgs;
+		SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+		UPackage::SavePackage(Package, MIC, *PackageFileName, SaveArgs);
+	}
+
+	// --- ключевой момент: сразу назначаем на Plane ---
+	if (Plane)
+	{
+		Plane->SetMaterial(0, MIC);
+	}
+
+	// Сохраняем ссылку
+	ArtMaterialAsset = MIC;
+
+	return MIC;
+#else
+	return nullptr;
+#endif
 }
 
 void AAbstractMuseumArt::SetFrameVisible(bool bVisible)
@@ -394,30 +463,29 @@ void AAbstractMuseumArt::UpdateLinetrace()
 
 	}
 }
-//-------Art texture-----
-void AAbstractMuseumArt::CreateDynamicMaterial()
-{
-	if (ArtMaterialStruct && (ArtMaterialStruct->BaseMaterial != nullptr) && !HasAnyFlags(RF_ClassDefaultObject))
-	{
-		ArtMaterial = UMaterialInstanceDynamic::Create(ArtMaterialStruct->BaseMaterial, this);
-		if (ArtMaterial)
-		{
-			Plane->SetMaterial(0, ArtMaterial);
-		}
-	}
-	else { SetHash(""); UE_LOG(LogTemp, Error, TEXT("CreateDynamicMaterial failed")); }
-}
 
 void AAbstractMuseumArt::ApplyTexture()
 {
-	if (LoadedTexture && ArtMaterial)
-	{
-		TArray<FMaterialParameterInfo> Params;
-		TArray<FGuid> Ids;
-		ArtMaterial->GetAllTextureParameterInfo(Params, Ids);
-		ArtMaterial->SetTextureParameterValue("Art", LoadedTexture);
-	}
-	else { SetHash(""); UE_LOG(LogTemp, Error, TEXT("ApplyTexture failed")); }
+
+#if WITH_EDITOR
+	if (!LoadedTexture)
+		//return;
+
+	if (!ArtMaterialAsset)
+		return;
+
+	FMaterialParameterInfo ParamInfo(TEXT("Art"));
+
+	ArtMaterialAsset->SetTextureParameterValueEditorOnly(
+		ParamInfo,
+		LoadedTexture
+	);
+
+	ArtMaterialAsset->PostEditChange();
+	ArtMaterialAsset->MarkPackageDirty();
+
+	Plane->SetMaterial(0, ArtMaterialAsset);
+#endif
 }
 
 void AAbstractMuseumArt::ScaleMeshes()

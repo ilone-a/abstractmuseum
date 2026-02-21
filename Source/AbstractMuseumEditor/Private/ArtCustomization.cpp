@@ -11,6 +11,8 @@
 #include "CustomWidgetsHelper.h"
 #include "Widgets/Input/SSlider.h"
 #include "Widgets/Input/SNumericEntryBox.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
 
 bool FMuseumArtCustomization::bShowDefaults = false;
 TSharedRef<IDetailCustomization> FMuseumArtCustomization::MakeInstance()
@@ -214,6 +216,7 @@ void FMuseumArtCustomization::OnShowDefaultsChanged(IDetailLayoutBuilder* Detail
 
 void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 {
+#if WITH_EDITOR
 	if (!TargetArt)
 		return;
 
@@ -223,28 +226,71 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 	TargetArt->LocalFilePath = FullPath;
 	TargetArt->MarkPackageDirty();
 
-	FString Hash = TargetArt->GetHash();
-	if (FAbstractMuseumFileHelper::IsFileChanged(FullPath, Hash))
+	FString CurrentHash = TargetArt->GetHash();
+
+	//if (!FAbstractMuseumFileHelper::IsFileChanged(FullPath, CurrentHash))
+	//	return;
+
+	// ---- считаем новый хэш ----
+	FString NewHash;
+	//FAbstractMuseumFileHelper::CalculateFileHash(FullPath, NewHash);
+	//TargetArt->SetHash(NewHash);
+
+	// ---- стабильное имя ассета ----
+	const FString StableBaseName =
+		FPackageName::GetShortName(
+			TargetArt->GetName()
+		);
+
+	const FString TextureAssetName =
+		FString::Printf(TEXT("TEX_%s"), *StableBaseName);
+
+	// ---- импорт текстуры как ассета ----
+	UTexture2D* SavedTexture =
+		FAbstractMuseumFileHelper::ImportTextureAsAsset(
+			FullPath,
+			TextureAssetName,
+			TEXT("/Game/AbstractMuseum/GeneratedTextures")
+		);
+
+	if (!SavedTexture)
+		return;
+
+	TargetArt->LoadedTexture = SavedTexture;
+
+	// ---- создаём или получаем MIC ----
+	UMaterialInstanceConstant* MIC =
+		TargetArt->CreateOrGetMaterialInstanceAsset();
+
+	if (!MIC)
+		return;
+
+	TargetArt->ArtMaterialAsset = MIC;
+
+	// ---- обновляем параметр ----
+	FMaterialParameterInfo ParamInfo(TEXT("Art"));
+	MIC->SetTextureParameterValueEditorOnly(ParamInfo, SavedTexture);
+	MIC->PostEditChange();
+	MIC->MarkPackageDirty();
+
+	// ---- применяем ----
+	if (TargetArt->Plane)
 	{
-		TargetArt->LoadedTexture =
-			FAbstractMuseumFileHelper::LoadTextureFromDisk(FullPath, TargetArt->GetHash());
-
-		if (TargetArt->LoadedTexture)
-		{
-			if (!TargetArt->ArtMaterial)
-			{
-				TargetArt->CreateDynamicMaterial();
-			}
-
-			TargetArt->ApplyTexture();
-
-			if (TargetArt->LoadedTexture->GetSizeX() > 0 &&
-				TargetArt->LoadedTexture->GetSizeY() > 0)
-			{
-				TargetArt->ScaleMeshes();
-			}
-		}
+		TargetArt->Plane->SetMaterial(0, MIC);
 	}
+
+	// ---- масштаб ----
+	if (SavedTexture->GetSizeX() > 0 &&
+		SavedTexture->GetSizeY() > 0)
+	{
+		TargetArt->ScaleMeshes();
+	}
+
+	TargetArt->MarkPackageDirty();
+	TargetArt->GetOutermost()->MarkPackageDirty();
+
+
+#endif
 }
 
 FString FMuseumArtCustomization::GetSelectedFilePath() const

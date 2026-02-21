@@ -36,12 +36,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Texture Loader")
 	UArtMaterialStruct* ArtMaterialStruct;
 
-	UPROPERTY(Transient)
-	UMaterialInstanceDynamic* ArtMaterial;
+	//UPROPERTY(Transient)
+	//UMaterialInstanceDynamic* ArtMaterial;
+
+	UPROPERTY(EditAnywhere, Category = "Material")
+	UMaterialInstanceConstant* ArtMaterialAsset;
 
 	UPROPERTY()
 	UTexture2D* LoadedTexture;
-	void CreateDynamicMaterial();
+
 	void ApplyTexture();
 	virtual void ScaleMeshes() override;// Scale all meshes to art picture size
 
@@ -62,6 +65,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Frame")
 	UMaterialInterface* FrameBaseMaterial;
 	void CreateDynamicFrameMaterial();
+
+	UMaterialInstanceConstant* CreateOrGetMaterialInstanceAsset();
+
 	void SetFrameVisible(bool bVisible);
 
 	//--Camera--
@@ -69,13 +75,14 @@ public:
 	bool bCameraLocked = false;
 	virtual void LockCameraToThing() override;
 	virtual void UnlockCameraFromThing() override;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
+	TObjectPtr<UStaticMeshComponent> Plane;
 
 protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
-	TObjectPtr<UStaticMeshComponent> Plane;
+
 
 	TObjectPtr<UDecalComponent> ProjectionDecal;
 	APlayerController* PC = nullptr;
