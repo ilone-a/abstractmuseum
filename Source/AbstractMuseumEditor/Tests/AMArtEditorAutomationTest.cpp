@@ -46,80 +46,78 @@ void FAMArtEditorSpec::Define() {
 
 	Describe("AMArt", [this]()
 		{
-			It("Creates BP, assigns struct and file path, then spawns", [this]()
-				{
-					// --- Load ArtMaterialStruct asset ---
-					const FString StructPath =
-						TestFolder + TEXT("/test_amstruct.test_amstruct");
+            It("Creates BP, assigns base material and file path, then spawns", [this]()
+                {
+                    // --- Load BaseMaterial asset ---
+                    const FString MaterialPath =
+                        TestFolder + TEXT("/M_TestBaseMaterial.M_TestBaseMaterial");
 
-					UArtMaterialStruct* ArtStruct =
-						LoadObject<UArtMaterialStruct>(nullptr, *StructPath);
+                    UMaterialInterface* BaseMaterial =
+                        LoadObject<UMaterialInterface>(nullptr, *MaterialPath);
 
-					TestNotNull(TEXT("ArtMaterialStruct loaded"), ArtStruct);
+                    TestNotNull(TEXT("BaseMaterial loaded"), BaseMaterial);
 
-					// --- Create Blueprint asset ---
-					FAssetToolsModule& AssetToolsModule =
-						FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
+                    // --- Create Blueprint asset ---
+                    FAssetToolsModule& AssetToolsModule =
+                        FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
 
-					UBlueprintFactory* Factory = NewObject<UBlueprintFactory>();
-					Factory->ParentClass = AAbstractMuseumArt::StaticClass();
+                    UBlueprintFactory* Factory = NewObject<UBlueprintFactory>();
+                    Factory->ParentClass = AAbstractMuseumArt::StaticClass();
 
-					UObject* NewAsset = AssetToolsModule.Get().CreateAsset(
-						TEXT("BP_TestArt"),
-						TestFolder,
-						UBlueprint::StaticClass(),
-						Factory
-					);
+                    UObject* NewAsset = AssetToolsModule.Get().CreateAsset(
+                        TEXT("BP_TestArt"),
+                        TestFolder,
+                        UBlueprint::StaticClass(),
+                        Factory
+                    );
 
-					TestNotNull(TEXT("Blueprint created"), NewAsset);
+                    TestNotNull(TEXT("Blueprint created"), NewAsset);
 
-					UBlueprint* BP = Cast<UBlueprint>(NewAsset);
-					TestNotNull(TEXT("Blueprint cast valid"), BP);
+                    UBlueprint* BP = Cast<UBlueprint>(NewAsset);
+                    TestNotNull(TEXT("Blueprint cast valid"), BP);
 
-					// --- Assign defaults on CDO ---
-					AAbstractMuseumArt* CDO =
-						Cast<AAbstractMuseumArt>(BP->GeneratedClass->GetDefaultObject());
+                    // --- Assign defaults on CDO ---
+                    AAbstractMuseumArt* CDO =
+                        Cast<AAbstractMuseumArt>(BP->GeneratedClass->GetDefaultObject());
 
-					TestNotNull(TEXT("CDO exists"), CDO);
+                    TestNotNull(TEXT("CDO exists"), CDO);
 
-					CDO->ArtMaterialStruct = ArtStruct;
-					const FString AbsoluteImagePath =
-						FPaths::ConvertRelativePathToFull(
-							FPaths::ProjectPluginsDir() +
-							TEXT("AbstractMuseum/Content/TestMap/test_img.jpg")
-						);
+                    CDO->BaseMaterial = BaseMaterial;
 
-					CDO->LocalFilePath = AbsoluteImagePath;
-					
+                    const FString AbsoluteImagePath =
+                        FPaths::ConvertRelativePathToFull(
+                            FPaths::ProjectPluginsDir() +
+                            TEXT("AbstractMuseum/Content/TestMap/test_img.jpg")
+                        );
 
-					// Force BP to recompile with new defaults
-					FKismetEditorUtilities::CompileBlueprint(BP);
+                    CDO->LocalFilePath = AbsoluteImagePath;
 
+                    FKismetEditorUtilities::CompileBlueprint(BP);
 
-					FVector SpawnLocation(50.f, 50.f, 170.f);
-					FRotator SpawnRotation = FRotator::ZeroRotator;
+                    // --- Spawn ---
+                    FVector SpawnLocation(50.f, 50.f, 170.f);
+                    FRotator SpawnRotation = FRotator::ZeroRotator;
 
-					AAbstractMuseumArt* Art =
-						World->SpawnActor<AAbstractMuseumArt>(
-							BP->GeneratedClass,
-							SpawnLocation,
-							SpawnRotation
-						);
+                    AAbstractMuseumArt* Art =
+                        World->SpawnActor<AAbstractMuseumArt>(
+                            BP->GeneratedClass,
+                            SpawnLocation,
+                            SpawnRotation
+                        );
 
-					TestNotNull(TEXT("AMArt spawned"), Art);
+                    TestNotNull(TEXT("AMArt spawned"), Art);
 
-					// --- Validate data on instance ---
-					TestEqual(
-						TEXT("ArtMaterialStruct assigned"),
-						Art->ArtMaterialStruct,
-						ArtStruct
-					);
+                    // --- Validate instance ---
+                    TestEqual(
+                        TEXT("BaseMaterial assigned"),
+                        Art->BaseMaterial,
+                        BaseMaterial
+                    );
 
-					TestTrue(
-						TEXT("LocalFilePath assigned"),
-						Art->LocalFilePath.Contains(TEXT("test_img.jpg"))
-					
-					);
-				});
-		});
+                    TestTrue(
+                        TEXT("LocalFilePath assigned"),
+                        Art->LocalFilePath.Contains(TEXT("test_img.jpg"))
+                    );
+                });
+        });
 }

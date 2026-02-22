@@ -7,11 +7,19 @@
 #include "TextureResource.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "UObject/Package.h"
-#include "Factories/TextureFactory.h"
-#include "AssetRegistry/AssetRegistryModule.h"
+#include "Editor/UnrealEd/Classes/Factories/TextureFactory.h"
+
 #include "UObject/SavePackage.h"
 #include "Misc/PackageName.h"
 #include "Editor.h"
+
+#include "Misc/ConfigCacheIni.h"
+
+#include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
+#include "AssetToolsModule.h"
 
 UTexture2D* FAbstractMuseumFileHelper::LoadTextureFromDisk(const FString& FilePath, FString& OutFileHash)
 {
@@ -110,6 +118,8 @@ FString FAbstractMuseumFileHelper::LoadTextFileFromDisk(const FString& FilePath,
 
 	return FileContents;
 }
+
+#if WITH_EDITOR
 UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& SourceFilePath, const FString& AssetName, const FString& PackagePath)
 {
 	if (!FPaths::FileExists(SourceFilePath))
@@ -117,7 +127,7 @@ UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& Sourc
 
 	const FString FullPackagePath = PackagePath + TEXT("/") + AssetName;
 
-	// если уже существует Ч возвращаем
+	//Get if exists
 	if (UTexture2D* Existing = LoadObject<UTexture2D>(nullptr, *FullPackagePath))
 		return Existing;
 
@@ -128,7 +138,7 @@ UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& Sourc
 	Package->FullyLoad();
 
 	UTextureFactory* Factory = NewObject<UTextureFactory>();
-	Factory->AddToRoot(); // защита от GC
+	Factory->AddToRoot(); //for  GC
 	Factory->SuppressImportOverwriteDialog();
 
 	Factory->bCreateMaterial = false;
@@ -160,7 +170,7 @@ UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& Sourc
 	if (!ImportedTexture)
 		return nullptr;
 
-	// регистраци€
+	//RegistryModule
 	FAssetRegistryModule::AssetCreated(ImportedTexture);
 	ImportedTexture->MarkPackageDirty();
 	Package->MarkPackageDirty();
@@ -185,92 +195,63 @@ UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& Sourc
 
 	return ImportedTexture;
 }
-UTexture2D* FAbstractMuseumFileHelper::SaveTextureAsAsset(UTexture2D* SourceTexture, const FString& AssetName, const FString& PackagePath)
+
+UMaterialInstanceConstant* FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(UObject* Owner, UMaterialInterface* BaseMaterial, UMeshComponent* TargetMesh)
 {
-	if (!SourceTexture)
+	if (!Owner || !BaseMaterial)
 		return nullptr;
 
-	const FString FullPackagePath = PackagePath + TEXT("/") + AssetName;
+	const FString StableBaseName = FPackageName::GetShortName(Owner->GetOutermost()->GetName());
+	const FString PackagePath = TEXT("/Game/AbstractMuseum/GeneratedMaterials");
+	const FString AssetName = FString::Printf(TEXT("MTL_%s"), *StableBaseName);
+	const FString FullPath = PackagePath + TEXT("/") + AssetName;
 
-	// если уже существует Ч возвращаем
-	if (UTexture2D* Existing = LoadObject<UTexture2D>(nullptr, *FullPackagePath))
-		return Existing;
+	const FString ObjectPath = FullPath + TEXT(".") + AssetName;
+	UMaterialInstanceConstant* MIC =
+		Cast<UMaterialInstanceConstant>(StaticLoadObject(
+			UMaterialInstanceConstant::StaticClass(),
+			nullptr,
+			*ObjectPath
+		));
 
-	UPackage* Package = CreatePackage(*FullPackagePath);
-	if (!Package)
-		return nullptr;
+	if (!MIC)
+	{
+		UPackage* Package = CreatePackage(*FullPath);
+		if (!Package)
+			return nullptr;
 
-	Package->FullyLoad();
+		Package->FullyLoad();
 
-	// создаЄм новую текстуру как ассет
-	UTexture2D* NewTexture = NewObject<UTexture2D>(
-		Package,
-		*AssetName,
-		RF_Public | RF_Standalone
-	);
-
-	// создаЄм платформенные данные
-	FTexturePlatformData* SrcData = SourceTexture->GetPlatformData();
-	if (!SrcData || SrcData->Mips.Num() == 0)
-		return nullptr;
-
-	const int32 Width = SrcData->SizeX;
-	const int32 Height = SrcData->SizeY;
-	const EPixelFormat Format = SrcData->PixelFormat;
-
-	NewTexture->SetPlatformData(new FTexturePlatformData());
-	FTexturePlatformData* DstData = NewTexture->GetPlatformData();
-
-	DstData->SizeX = Width;
-	DstData->SizeY = Height;
-	DstData->PixelFormat = Format;
-
-	// создаЄм mip
-	FTexture2DMipMap* Mip = new FTexture2DMipMap();
-	DstData->Mips.Add(Mip);
-
-	Mip->SizeX = Width;
-	Mip->SizeY = Height;
-
-	const int64 DataSize = SrcData->Mips[0].BulkData.GetBulkDataSize();
-
-	void* SrcPtr = SrcData->Mips[0].BulkData.Lock(LOCK_READ_ONLY);
-
-	Mip->BulkData.Lock(LOCK_READ_WRITE);
-	void* DstPtr = Mip->BulkData.Realloc(DataSize);
-
-	FMemory::Memcpy(DstPtr, SrcPtr, DataSize);
-
-	Mip->BulkData.Unlock();
-	SrcData->Mips[0].BulkData.Unlock();
-
-	// базовые настройки
-	NewTexture->SRGB = true;
-	NewTexture->CompressionSettings = TextureCompressionSettings::TC_Default;
-	NewTexture->MipGenSettings = TextureMipGenSettings::TMGS_NoMipmaps;
-
-	NewTexture->UpdateResource();
-
-	// регистрируем
-	FAssetRegistryModule::AssetCreated(NewTexture);
-	NewTexture->MarkPackageDirty();
-
-	const FString PackageFileName =
-		FPackageName::LongPackageNameToFilename(
-			FullPackagePath,
-			FPackageName::GetAssetPackageExtension()
+		MIC = NewObject<UMaterialInstanceConstant>(
+			Package,
+			*AssetName,
+			RF_Public | RF_Standalone
 		);
 
-	UPackage::SavePackage(
-		Package,
-		NewTexture,
-		RF_Public | RF_Standalone,
-		*PackageFileName
-	);
+		MIC->SetParentEditorOnly(BaseMaterial);
 
-	return NewTexture;
+		FAssetRegistryModule::AssetCreated(MIC);
+		MIC->MarkPackageDirty();
+
+		const FString PackageFileName =
+			FPackageName::LongPackageNameToFilename(
+				FullPath,
+				FPackageName::GetAssetPackageExtension()
+			);
+
+		FSavePackageArgs SaveArgs;
+		SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+		UPackage::SavePackage(Package, MIC, *PackageFileName, SaveArgs);
+	}
+
+	if (TargetMesh)
+	{
+		TargetMesh->SetMaterial(0, MIC);
+	}
+
+	return MIC;
 }
-//--Item is loaded from assets----
+#endif
 
 FString FAbstractMuseumFileHelper::CalculateFileHash(const TArray<uint8>& Data)
 {

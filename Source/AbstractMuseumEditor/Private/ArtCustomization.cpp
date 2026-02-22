@@ -3,6 +3,7 @@
 #include "DetailCategoryBuilder.h"
 #include "Widgets/Input/SFilePathPicker.h"
 #include "../Public/AbstractMuseumArt.h"
+#include "../Public/AbstractMuseumFileHelper.h"
 #include "IDetailChildrenBuilder.h"
 #include "PropertyCustomizationHelpers.h"
 #include "EditorStyleSet.h"
@@ -231,12 +232,12 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 	//if (!FAbstractMuseumFileHelper::IsFileChanged(FullPath, CurrentHash))
 	//	return;
 
-	// ---- считаем новый хэш ----
+	// TODO hash
 	FString NewHash;
 	//FAbstractMuseumFileHelper::CalculateFileHash(FullPath, NewHash);
 	//TargetArt->SetHash(NewHash);
 
-	// ---- стабильное имя ассета ----
+	//Create asset name
 	const FString StableBaseName =
 		FPackageName::GetShortName(
 			TargetArt->GetName()
@@ -245,7 +246,7 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 	const FString TextureAssetName =
 		FString::Printf(TEXT("TEX_%s"), *StableBaseName);
 
-	// ---- импорт текстуры как ассета ----
+	//Import file to save to texture
 	UTexture2D* SavedTexture =
 		FAbstractMuseumFileHelper::ImportTextureAsAsset(
 			FullPath,
@@ -256,30 +257,28 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 	if (!SavedTexture)
 		return;
 
-	TargetArt->LoadedTexture = SavedTexture;
+	//TargetArt->LoadedTexture = SavedTexture;
 
-	// ---- создаём или получаем MIC ----
+	//Get or create MIC
 	UMaterialInstanceConstant* MIC =
-		TargetArt->CreateOrGetMaterialInstanceAsset();
+		FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(TargetArt, TargetArt->BaseMaterial, TargetArt->Plane);
 
 	if (!MIC)
 		return;
 
 	TargetArt->ArtMaterialAsset = MIC;
 
-	// ---- обновляем параметр ----
+	//Update Art parameter in Material
 	FMaterialParameterInfo ParamInfo(TEXT("Art"));
 	MIC->SetTextureParameterValueEditorOnly(ParamInfo, SavedTexture);
 	MIC->PostEditChange();
 	MIC->MarkPackageDirty();
 
-	// ---- применяем ----
 	if (TargetArt->Plane)
 	{
 		TargetArt->Plane->SetMaterial(0, MIC);
 	}
 
-	// ---- масштаб ----
 	if (SavedTexture->GetSizeX() > 0 &&
 		SavedTexture->GetSizeY() > 0)
 	{
