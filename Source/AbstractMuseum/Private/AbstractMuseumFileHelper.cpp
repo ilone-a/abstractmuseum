@@ -201,7 +201,7 @@ UMaterialInstanceConstant* FAbstractMuseumFileHelper::CreateOrGetMaterialInstanc
 	if (!Owner || !BaseMaterial)
 		return nullptr;
 
-	const FString StableBaseName = FPackageName::GetShortName(Owner->GetOutermost()->GetName());
+	const FString StableBaseName = FPackageName::GetShortName(Owner->GetName());
 	const FString PackagePath = TEXT("/Game/AbstractMuseum/GeneratedMaterials");
 	const FString AssetName = FString::Printf(TEXT("MTL_%s"), *StableBaseName);
 	const FString FullPath = PackagePath + TEXT("/") + AssetName;

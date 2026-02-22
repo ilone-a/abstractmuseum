@@ -138,11 +138,7 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 
 
-	if (!BaseMaterial)
-	{
-		UE_LOG(LogTemp, Error, TEXT("BaseMaterial in ArtMaterialStruct is NULL"));
-		return;
-	}
+
 	if (!Plane)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Plane is NULL in OnConstruction"));
@@ -266,6 +262,7 @@ void AAbstractMuseumArt::UpdateFrame()
 
 	);
 	Frame->SetRelativeScale3D(FrameScale);
+	Frame->UpdateBounds();
 		FVector t = (Frame->Bounds.BoxExtent);
 	const float MinValue = FMath::Min3(
 		(float)t.X,
@@ -396,8 +393,8 @@ void AAbstractMuseumArt::ScaleMeshes()
 
 #if WITH_EDITOR
 	FMaterialParameterInfo ParamInfo(TEXT("Art"));
-	ArtMaterialAsset->GetTextureParameterValue(ParamInfo, Texture);
-#else
+	//ArtMaterialAsset->GetTextureParameterValue(ParamInfo, Texture);
+
 	ArtMaterialAsset->GetTextureParameterValue(TEXT("Art"), Texture);
 #endif
 
@@ -416,6 +413,7 @@ void AAbstractMuseumArt::ScaleMeshes()
 
 	FVector PlaneScale(BaseScale * AspectRatio, BaseScale, 1.f);
 	Plane->SetRelativeScale3D(PlaneScale);
+	Plane->UpdateBounds();
 
 	float frameZ = Frame->Bounds.BoxExtent.Z;
 	float frameAspect = FrameDepth / frameZ;
@@ -427,7 +425,7 @@ void AAbstractMuseumArt::ScaleMeshes()
 	);
 
 	Frame->SetRelativeScale3D(FrameScale);
-
+	Frame->UpdateBounds();
 	FVector t = Frame->Bounds.BoxExtent;
 	const float MinValue = FMath::Min3(t.X, t.Y, t.Z);
 
