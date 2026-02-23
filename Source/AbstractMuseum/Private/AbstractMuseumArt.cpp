@@ -11,7 +11,7 @@
 #include "Components/PrimitiveComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "CoreGlobals.h"
-
+#include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/Character.h"
@@ -19,7 +19,9 @@
 #include "Misc/ConfigCacheIni.h"
 #include "Interfaces/IPluginManager.h"
 #include "Materials/MaterialInstanceConstant.h"
-
+#include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Misc/FileHelper.h"
 
 static UStaticMesh* CachedArtPlaneMesh = nullptr;
 static UStaticMesh* CachedFrameCubeMesh = nullptr;

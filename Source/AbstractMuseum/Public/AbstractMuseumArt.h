@@ -27,7 +27,7 @@ public:
 	//UPROPERTY(EditAnywhere, Category = "Texture Loader")
 	//UArtMaterialStruct* ArtMaterialStruct;
 
-	UPROPERTY(EditAnywhere, Category = "Material")
+	UPROPERTY(EditAnywhere, Category = "Texture Loader")
 	UMaterialInterface* BaseMaterial;
 
 	UPROPERTY(EditAnywhere, Category = "Material")
