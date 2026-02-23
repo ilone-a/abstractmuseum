@@ -2,7 +2,7 @@
 
 
 #include "AbstractMuseumArt.h"
-#include "AbstractMuseumFileHelper.h"
+//#include "AbstractMuseumFileHelper.h"
 #include "AbstractPlayerController.h"
 #include "AbstractMuseumSettings.h"
 #include "AssetRegistry/AssetRegistryModule.h"

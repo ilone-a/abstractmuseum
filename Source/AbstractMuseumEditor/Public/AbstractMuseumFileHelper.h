@@ -3,7 +3,7 @@
 #include "Engine/Texture2D.h"
 
 
-class ABSTRACTMUSEUM_API FAbstractMuseumFileHelper 
+class ABSTRACTMUSEUMEDITOR_API FAbstractMuseumFileHelper
 {
 	//C++ static lib 
 private:
