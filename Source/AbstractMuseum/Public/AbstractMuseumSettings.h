@@ -7,7 +7,7 @@ UCLASS(BlueprintType)
 class ABSTRACTMUSEUM_API UAbstractMuseumSettings : public UObject {
 	GENERATED_BODY()
 public:
-	// 
+	// Default parameters
 	static float LensTimerDelay;
 	static float FrameOffset;
 	static float CameraDistanceOffset;

@@ -12,7 +12,6 @@ class USceneComponent;
 class UStaticMeshComponent;
 class UMaterialInstanceDynamic;
 class UMaterialInstance;
-
 class UMaterialInstanceConstant;
 
 UCLASS()
@@ -23,16 +22,12 @@ class ABSTRACTMUSEUM_API AAbstractMuseumArt : public AAbstractMuseumActor
 public:
 
 	AAbstractMuseumArt();
-	//---Material---
-	//UPROPERTY(EditAnywhere, Category = "Texture Loader")
-	//UArtMaterialStruct* ArtMaterialStruct;
 
+	//---Material asset and base---
 	UPROPERTY(EditAnywhere, Category = "Texture Loader")
 	UMaterialInterface* BaseMaterial;
-
 	UPROPERTY(EditAnywhere, Category = "Material")
 	UMaterialInstanceConstant* ArtMaterialAsset;
-
 	void ApplyTexture();
 	virtual void ScaleMeshes() override;// Scale all meshes to art picture size
 

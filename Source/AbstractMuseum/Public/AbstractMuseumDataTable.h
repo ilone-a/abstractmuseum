@@ -14,19 +14,17 @@ enum class EAMAssetType : uint8
 	Error UMETA(DisplayName = "Error", Hidden)
 };
 
-
-
 USTRUCT(BlueprintType)
 struct FAMDataTableRowEntry : public FTableRowBase
 {
 	GENERATED_BODY()
 
-UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
-FName DisplayName;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
+	FName DisplayName;
 
-UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DataTable")
-EAMAssetType AssetType;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DataTable")
+	EAMAssetType AssetType;
 
-UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
-FString AssetPath;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
+	FString AssetPath;
 };

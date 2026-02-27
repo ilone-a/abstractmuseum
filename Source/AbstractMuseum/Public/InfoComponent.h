@@ -2,15 +2,13 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "InfoComponent.generated.h"
-//
 
-// data storage of the virtual museum art instance.
+// Data storage of the virtual museum actor instance
 
 
 USTRUCT(BlueprintType)
 struct FAMInfoComponent {
 	GENERATED_BODY()
-
 	UPROPERTY(BlueprintReadOnly, Category = "Default")
 	FName InventoryID;
 	UPROPERTY(EditAnywhere, Category = "Default")

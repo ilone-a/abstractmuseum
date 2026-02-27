@@ -76,10 +76,10 @@ protected:
 	//info
 	UPROPERTY(EditAnywhere, Category = "Info")
 	FAMInfoComponent InfoComponent;
-// camera zoom logic
+
+	// camera zoom logic
 	UPROPERTY(VisibleAnywhere, Category = "Default")
 	UCameraComponent* AMCamera;
-
 	FVector DefaultLocation;
 	FRotator DefaultRotation;
 	virtual void OnConstruction(const FTransform& Transform) override;
