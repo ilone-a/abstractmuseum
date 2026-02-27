@@ -1,2 +1,0 @@
-#include "SemanticNodeComponent.h"
-

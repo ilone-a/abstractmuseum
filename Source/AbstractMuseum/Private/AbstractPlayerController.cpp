@@ -9,7 +9,6 @@
 #include "Widgets/Input/SButton.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
-//#include "AbstractMuseumProjectionLogic.h"
 #include "AbstractMuseumActor.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -17,7 +16,6 @@
 void AStartMenuController::BeginPlay()
 {
 	Super::BeginPlay();
-	//ProjectionLogic = AAbstractMuseumProjectionLogic::Get(GetWorld());
 	auto* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 	if (Subsystem && IMC_Player)
 	{

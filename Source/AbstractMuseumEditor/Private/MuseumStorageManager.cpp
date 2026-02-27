@@ -18,7 +18,7 @@ void FMuseumStorageManager::RebuildAMShow()
 		if (!EditorWorld) return;
 
 		//TODO remove hardcode
-		UDataTable* Table = GetOrCreateDataTable("/Game/Data", "Show");
+		UDataTable* Table = GetOrCreateDataTable("/Game/AbstractMuseum/GeneratedStorage", "Show");
 		if (!Table) return;
 
 		Table->EmptyTable();
@@ -50,7 +50,7 @@ void FMuseumStorageManager::RebuildAMShow()
 // assets from AssetRegistry
 void FMuseumStorageManager::RebuildAMStorage()
 {
-	UDataTable* Table = GetOrCreateDataTable("/Game/Data", "Storage");
+	UDataTable* Table = GetOrCreateDataTable("/Game/AbstractMuseum/GeneratedStorage", "Storage");
 	if (!Table)
 		return;
 

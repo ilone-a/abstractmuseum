@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "SemanticNodeComponent.generated.h"
+#include "InfoComponent.generated.h"
 //
 
 // data storage of the virtual museum art instance.

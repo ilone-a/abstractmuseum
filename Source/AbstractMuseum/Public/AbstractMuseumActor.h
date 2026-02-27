@@ -2,11 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "ArtInteractInterface.h"
-#include "SemanticNodeComponent.h"
+#include "InfoComponent.h"
 #include "AbstractMuseumActor.generated.h"
 
 // Other base structs

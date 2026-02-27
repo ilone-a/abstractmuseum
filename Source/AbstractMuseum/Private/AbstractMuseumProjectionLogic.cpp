@@ -26,7 +26,6 @@ AAbstractMuseumProjectionLogic::AAbstractMuseumProjectionLogic()
 #endif
 }
 
-
 AAbstractMuseumProjectionLogic* AAbstractMuseumProjectionLogic::Get(UWorld* World)
 {
 	if (!World) return nullptr;
@@ -35,7 +34,6 @@ AAbstractMuseumProjectionLogic* AAbstractMuseumProjectionLogic::Get(UWorld* Worl
 	}
 	return nullptr;
 }
-
 
 #if WITH_EDITOR
 
@@ -48,7 +46,6 @@ void AAbstractMuseumProjectionLogic::RegisterEditorSelect()
 		bEditorHookRegistered = true;
 	}
 }
-
 
 //---Main walls projection logic---
 void AAbstractMuseumProjectionLogic::OnEditorSelectionChanged(UObject* NewSelection)
@@ -88,9 +85,6 @@ void AAbstractMuseumProjectionLogic::OnEditorSelectionChanged(UObject* NewSelect
 					//--Create projection. Move actor to hit point, null selected actor
 					FVector Offset = Hit.Normal * UAbstractMuseumSettings::OffsetFromWall; // 2 offset from wall 
 					SelectedActor->SetActorLocation(Hit.Location + Offset);
-
-					//FVector Offset2 = Hit.Normal * OffsetFromWall;
-					//SelectedActor->SetActorLocation(Hit.Location + Offset2);
 
 					//---Get wall normal and forward of actor---
 					FVector WallNormal = Hit.Normal.GetSafeNormal();
