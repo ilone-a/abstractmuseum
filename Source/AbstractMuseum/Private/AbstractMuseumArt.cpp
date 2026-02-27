@@ -1,8 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AbstractMuseumArt.h"
-//#include "AbstractMuseumFileHelper.h"
 #include "AbstractPlayerController.h"
 #include "AbstractMuseumSettings.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -153,7 +151,6 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 	}
 
 	CreateDynamicFrameMaterial();
-
 	if (Frame && CachedFrameCubeMesh)
 	{
 		Frame->SetStaticMesh(CachedFrameCubeMesh);
@@ -163,14 +160,10 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 		UE_LOG(LogTemp, Error, TEXT("Failed to load default Cube mesh for Frame"));
 	}
 
-	//if (LoadedTexture )
 	{
-
-
 #if WITH_EDITOR
 		CalculateCameraPositionEditor();
 #endif
-
 	}
 	if (Frame)
 	{
@@ -192,7 +185,7 @@ void AAbstractMuseumArt::BeginPlay()
 		OriginalViewTarget = PC->GetViewTarget();
 	}
 	// check init
-	if ( !Plane)
+	if (!Plane)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ArtMaterialStruct/BaseMaterial/Plane not set"));
 		return;
@@ -204,8 +197,6 @@ void AAbstractMuseumArt::BeginPlay()
 		Plane->SetMaterial(0, ArtMaterialAsset);
 		ScaleMeshes();
 	}
-
-	
 
 	// frame
 	if (Frame)
@@ -222,14 +213,11 @@ void AAbstractMuseumArt::BeginPlay()
 	{
 		AMCamera->SetWorldLocation(SavedCameraLocation);
 	}
-
-
 }
 
 //-------Frame settings-----
 void AAbstractMuseumArt::CreateDynamicFrameMaterial()
 {
-
 	if (FrameBaseMaterial && !HasAnyFlags(RF_ClassDefaultObject))
 	{
 		FrameMaterial = UMaterialInstanceDynamic::Create(FrameBaseMaterial, this);
@@ -242,7 +230,6 @@ void AAbstractMuseumArt::CreateDynamicFrameMaterial()
 	{
 		UE_LOG(LogTemp, Error, TEXT("CreateDynamicMaterial failed: no BaseMaterial and no fallback"));
 	}
-
 }
 
 void AAbstractMuseumArt::SetFrameVisible(bool bVisible)
@@ -251,7 +238,7 @@ void AAbstractMuseumArt::SetFrameVisible(bool bVisible)
 }
 
 void AAbstractMuseumArt::UpdateFrame()
-{/**/
+{
 	if (!bIsFrameVisible) return;
 	FVector PlaneScale = Plane->GetRelativeScale3D();
 	float frameAspect = 0.0f;
@@ -261,19 +248,19 @@ void AAbstractMuseumArt::UpdateFrame()
 
 	FVector FrameScale(
 		PlaneScale.X + FrameBorder,
-		frameAspect,			
+		frameAspect,
 		PlaneScale.Y + FrameBorder
 
 	);
 	Frame->SetRelativeScale3D(FrameScale);
 	Frame->UpdateBounds();
-		FVector t = (Frame->Bounds.BoxExtent);
+	FVector t = (Frame->Bounds.BoxExtent);
 	const float MinValue = FMath::Min3(
 		(float)t.X,
 		(float)t.Y,
 		(float)t.Z
 	);
-	Frame->SetRelativeLocation(FVector(0.f, -( MinValue * UAbstractMuseumSettings::FrameOffset), 0.f));
+	Frame->SetRelativeLocation(FVector(0.f, -(MinValue * UAbstractMuseumSettings::FrameOffset), 0.f));
 }
 
 //-------Camera actions-----
@@ -329,9 +316,7 @@ void AAbstractMuseumArt::LockCameraToThing()
 
 void AAbstractMuseumArt::UnlockCameraFromThing()
 {
-
 	if (!PC) return;
-
 	// Return camera to player
 	if (OriginalViewTarget)
 		PC->SetViewTargetWithBlend(OriginalViewTarget, 0.5f);
@@ -353,7 +338,6 @@ void AAbstractMuseumArt::UpdateLinetrace()
 	FVector Start = Plane->GetComponentLocation();
 	FVector Forward = Plane->GetRightVector();
 	FVector End = Start - Forward * UAbstractMuseumSettings::ProjectionOffset;
-	//End.Y = -End.Y;
 
 	FCollisionQueryParams Params;
 	Params.bTraceComplex = true;
@@ -368,13 +352,11 @@ void AAbstractMuseumArt::UpdateLinetrace()
 		EditorProjection.HitLocation = Hit.Location;
 		EditorProjection.Distance = FVector::Dist(Start, Hit.Location);
 		EditorProjection.bHit = true;
-
 	}
 }
 
 void AAbstractMuseumArt::ApplyTexture()
 {
-
 #if WITH_EDITOR
 	if (!ArtMaterialAsset)
 		return;
@@ -392,13 +374,10 @@ void AAbstractMuseumArt::ScaleMeshes()
 		UE_LOG(LogTemp, Error, TEXT("ScaleMeshes: invalid state"));
 		return;
 	}
-
 	UTexture* Texture = nullptr;
 
 #if WITH_EDITOR
 	FMaterialParameterInfo ParamInfo(TEXT("Art"));
-	//ArtMaterialAsset->GetTextureParameterValue(ParamInfo, Texture);
-
 	ArtMaterialAsset->GetTextureParameterValue(TEXT("Art"), Texture);
 #endif
 
@@ -442,13 +421,11 @@ void AAbstractMuseumArt::ScaleMeshes()
 void AAbstractMuseumArt::PostEditMove(bool bFinished)
 {
 	Super::PostEditMove(bFinished);
-	//UpdateProjectionDecal();
 }
 
 void AAbstractMuseumArt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-	//UpdateProjectionDecal();
 }
 #endif
 

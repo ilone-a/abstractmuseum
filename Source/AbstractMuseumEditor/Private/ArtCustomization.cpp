@@ -227,16 +227,6 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 	TargetArt->LocalFilePath = FullPath;
 	TargetArt->MarkPackageDirty();
 
-	FString CurrentHash = TargetArt->GetHash();
-
-	//if (!FAbstractMuseumFileHelper::IsFileChanged(FullPath, CurrentHash))
-	//	return;
-
-	// TODO hash
-	FString NewHash;
-	//FAbstractMuseumFileHelper::CalculateFileHash(FullPath, NewHash);
-	//TargetArt->SetHash(NewHash);
-
 	//Create asset name
 	const FString StableBaseName =
 		FPackageName::GetShortName(
@@ -256,9 +246,6 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 
 	if (!SavedTexture)
 		return;
-
-	//TargetArt->LoadedTexture = SavedTexture;
-
 	//Get or create MIC
 	UMaterialInstanceConstant* MIC =
 		FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(TargetArt, TargetArt->BaseMaterial, TargetArt->Plane);

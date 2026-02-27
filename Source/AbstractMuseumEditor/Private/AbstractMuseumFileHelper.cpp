@@ -142,7 +142,6 @@ UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& Sourc
 	Factory->SuppressImportOverwriteDialog();
 
 	Factory->bCreateMaterial = false;
-	//Factory->bCreateMaterialInstance = false;
 	Factory->bEditorImport = true;
 
 	const uint8* Buffer = nullptr;
