@@ -183,8 +183,16 @@ void AAbstractMuseumArt::BeginPlay()
 {
 	Super::BeginPlay();
 	SetFrameVisible(false);
+
+	// PlayerController
+	PC = GetWorld()->GetFirstPlayerController();
+	if (PC)
+	{
+		PlayerPawn = PC->GetPawn();
+		OriginalViewTarget = PC->GetViewTarget();
+	}
 	// check init
-	if (!BaseMaterial || !Plane)
+	if ( !Plane)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ArtMaterialStruct/BaseMaterial/Plane not set"));
 		return;
@@ -215,13 +223,7 @@ void AAbstractMuseumArt::BeginPlay()
 		AMCamera->SetWorldLocation(SavedCameraLocation);
 	}
 
-	// PlayerController
-	PC = GetWorld()->GetFirstPlayerController();
-	if (PC)
-	{
-		PlayerPawn = PC->GetPawn();
-		OriginalViewTarget = PC->GetViewTarget();
-	}
+
 }
 
 //-------Frame settings-----
@@ -292,7 +294,7 @@ void AAbstractMuseumArt::CalculateCameraPositionEditor()
 	FrameDistance += UAbstractMuseumSettings::CameraDistanceOffset;
 
 	FVector Target = Bounds.Origin;
-	// WTF!
+	// TODO!
 	const FVector BackDirection = Plane->GetRightVector().GetSafeNormal();
 
 	FVector NewCamLocation = Target + BackDirection * FrameDistance;
