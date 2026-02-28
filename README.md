@@ -5,8 +5,8 @@ It allows creating BP instances from C++ classes inherited from ```AAbstractMuse
 # Main classes to save and customize data
 ```AAbstractMuseumActor```: Base class for all museum objects.
 
-```AAbstractMuseumArt```: For art objects. Supports dynamic texture loading from .jpg or .png, 
-auto scaling, and projection to the nearest wall (if ```bEnableProjection``` is enabled).
+```AAbstractMuseumArt```: For art objects. Supports material and texture creation from .jpg or .png, 
+auto scaling, zoom to the object and projection to the nearest wall (if ```bEnableProjection``` is enabled).
 
 ```AAbstractMuseumText```: For text objects (can be loaded from files or edited directly in the editor).
 
@@ -17,6 +17,5 @@ auto scaling, and projection to the nearest wall (if ```bEnableProjection``` is 
 
 Built for Unreal Engine 5.5.4
 
-# How to use
-https://youtu.be/9CmAXXqsyq0?si=Cf0NPPePRXFJhk_M
+
 
