@@ -24,9 +24,7 @@ AAbstractMuseumProjectionLogic::AAbstractMuseumProjectionLogic()
 #if WITH_EDITOR
 	bEditorHookRegistered = false;
 #endif
-	PrimaryActorTick.bCanEverTick = true;
 }
-
 
 AAbstractMuseumProjectionLogic* AAbstractMuseumProjectionLogic::Get(UWorld* World)
 {
@@ -37,36 +35,17 @@ AAbstractMuseumProjectionLogic* AAbstractMuseumProjectionLogic::Get(UWorld* Worl
 	return nullptr;
 }
 
-void AAbstractMuseumProjectionLogic::CollectAbstractMuseumActors()
-{
-	AMActors.Empty();
-
-	TArray<AActor*> MActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAbstractMuseumActor::StaticClass(), MActors);
-
-	for (AActor* Actor : MActors)
-	{
-		if (AAbstractMuseumActor* Art = Cast<AAbstractMuseumActor>(Actor))
-		{
-			AMActors.Add(Art);
-		}
-	}
-#if WITH_EDITOR
-	RegisterEditorSelect();
-#endif
-}
-
 #if WITH_EDITOR
 
 void AAbstractMuseumProjectionLogic::RegisterEditorSelect()
 {
-	if (GEditor)
+	if (!GEditor || bEditorHookRegistered) return;
+	if (USelection* Sl = GEditor->GetSelectedActors())
 	{
+		Sl->SelectObjectEvent.AddUObject(this, &AAbstractMuseumProjectionLogic::OnEditorSelectionChanged);
 		bEditorHookRegistered = true;
-		GEditor->GetSelectedActors()->SelectObjectEvent.AddUObject(this, &AAbstractMuseumProjectionLogic::OnEditorSelectionChanged);
 	}
 }
-
 
 //---Main walls projection logic---
 void AAbstractMuseumProjectionLogic::OnEditorSelectionChanged(UObject* NewSelection)
@@ -107,9 +86,6 @@ void AAbstractMuseumProjectionLogic::OnEditorSelectionChanged(UObject* NewSelect
 					FVector Offset = Hit.Normal * UAbstractMuseumSettings::OffsetFromWall; // 2 offset from wall 
 					SelectedActor->SetActorLocation(Hit.Location + Offset);
 
-					//FVector Offset2 = Hit.Normal * OffsetFromWall;
-					//SelectedActor->SetActorLocation(Hit.Location + Offset2);
-
 					//---Get wall normal and forward of actor---
 					FVector WallNormal = Hit.Normal.GetSafeNormal();
 					FVector ArtForward = SelectedActor->GetActorForwardVector().GetSafeNormal();
@@ -145,7 +121,6 @@ void AAbstractMuseumProjectionLogic::OnEditorSelectionChanged(UObject* NewSelect
 void AAbstractMuseumProjectionLogic::BeginPlay()
 {
 	Super::BeginPlay();
-	CollectAbstractMuseumActors();
 }
 
 
@@ -165,5 +140,7 @@ void AAbstractMuseumProjectionLogic::EndPlay(const EEndPlayReason::Type EndPlayR
 void AAbstractMuseumProjectionLogic::PostLoad()
 {
 	Super::PostLoad();
-	CollectAbstractMuseumActors();
+#if WITH_EDITOR
+	RegisterEditorSelect();
+#endif
 }

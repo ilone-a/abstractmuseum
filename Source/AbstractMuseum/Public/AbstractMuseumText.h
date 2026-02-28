@@ -65,7 +65,6 @@ public:
 
 	int GetTextMaxLen();
 	int GetStringMaxLen();
-
 	void UpdateLinetrace();
 	void UpdateText();
 	void UpdateTextPlane();
@@ -76,7 +75,6 @@ public:
 #endif
 
 protected:
-
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
@@ -91,5 +89,4 @@ protected:
 	UFUNCTION(CallInEditor, Category = "Text")
 	void UpdateTextAlignment();
 	void ApplyAlignmentToText();
-
 };

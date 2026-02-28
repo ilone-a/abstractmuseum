@@ -5,6 +5,21 @@
 #include "Modules/ModuleManager.h"
 #include "Engine/Texture2D.h"
 #include "TextureResource.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "UObject/Package.h"
+#include "Editor/UnrealEd/Classes/Factories/TextureFactory.h"
+
+#include "UObject/SavePackage.h"
+#include "Misc/PackageName.h"
+#include "Editor.h"
+
+#include "Misc/ConfigCacheIni.h"
+
+#include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
+#include "AssetToolsModule.h"
 
 UTexture2D* FAbstractMuseumFileHelper::LoadTextureFromDisk(const FString& FilePath, FString& OutFileHash)
 {
@@ -103,7 +118,139 @@ FString FAbstractMuseumFileHelper::LoadTextFileFromDisk(const FString& FilePath,
 
 	return FileContents;
 }
-//--Item is loaded from assets----
+
+#if WITH_EDITOR
+UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& SourceFilePath, const FString& AssetName, const FString& PackagePath)
+{
+	if (!FPaths::FileExists(SourceFilePath))
+		return nullptr;
+
+	const FString FullPackagePath = PackagePath + TEXT("/") + AssetName;
+
+	//Get if exists
+	if (UTexture2D* Existing = LoadObject<UTexture2D>(nullptr, *FullPackagePath))
+		return Existing;
+
+	UPackage* Package = CreatePackage(*FullPackagePath);
+	if (!Package)
+		return nullptr;
+
+	Package->FullyLoad();
+
+	UTextureFactory* Factory = NewObject<UTextureFactory>();
+	Factory->AddToRoot(); //for  GC
+	Factory->SuppressImportOverwriteDialog();
+
+	Factory->bCreateMaterial = false;
+	Factory->bEditorImport = true;
+
+	const uint8* Buffer = nullptr;
+	TArray<uint8> FileData;
+
+	if (!FFileHelper::LoadFileToArray(FileData, *SourceFilePath))
+		return nullptr;
+
+	Buffer = FileData.GetData();
+
+	UTexture2D* ImportedTexture = Cast<UTexture2D>(
+		Factory->FactoryCreateBinary(
+			UTexture2D::StaticClass(),
+			Package,
+			*AssetName,
+			RF_Public | RF_Standalone,
+			nullptr,
+			*FPaths::GetExtension(SourceFilePath),
+			Buffer,
+			Buffer + FileData.Num(),
+			GWarn
+		)
+	);
+
+	if (!ImportedTexture)
+		return nullptr;
+
+	//RegistryModule
+	FAssetRegistryModule::AssetCreated(ImportedTexture);
+	ImportedTexture->MarkPackageDirty();
+	Package->MarkPackageDirty();
+
+	const FString PackageFileName =
+		FPackageName::LongPackageNameToFilename(
+			FullPackagePath,
+			FPackageName::GetAssetPackageExtension()
+		);
+
+	FSavePackageArgs SaveArgs;
+	SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+
+	UPackage::SavePackage(
+		Package,
+		ImportedTexture,
+		*PackageFileName,
+		SaveArgs
+	);
+
+	Factory->RemoveFromRoot();
+
+	return ImportedTexture;
+}
+
+UMaterialInstanceConstant* FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(UObject* Owner, UMaterialInterface* BaseMaterial, UMeshComponent* TargetMesh)
+{
+	if (!Owner || !BaseMaterial)
+		return nullptr;
+
+	const FString StableBaseName = FPackageName::GetShortName(Owner->GetName());
+	const FString PackagePath = TEXT("/Game/AbstractMuseum/GeneratedMaterials");
+	const FString AssetName = FString::Printf(TEXT("MTL_%s"), *StableBaseName);
+	const FString FullPath = PackagePath + TEXT("/") + AssetName;
+
+	const FString ObjectPath = FullPath + TEXT(".") + AssetName;
+	UMaterialInstanceConstant* MIC =
+		Cast<UMaterialInstanceConstant>(StaticLoadObject(
+			UMaterialInstanceConstant::StaticClass(),
+			nullptr,
+			*ObjectPath
+		));
+
+	if (!MIC)
+	{
+		UPackage* Package = CreatePackage(*FullPath);
+		if (!Package)
+			return nullptr;
+
+		Package->FullyLoad();
+
+		MIC = NewObject<UMaterialInstanceConstant>(
+			Package,
+			*AssetName,
+			RF_Public | RF_Standalone
+		);
+
+		MIC->SetParentEditorOnly(BaseMaterial);
+
+		FAssetRegistryModule::AssetCreated(MIC);
+		MIC->MarkPackageDirty();
+
+		const FString PackageFileName =
+			FPackageName::LongPackageNameToFilename(
+				FullPath,
+				FPackageName::GetAssetPackageExtension()
+			);
+
+		FSavePackageArgs SaveArgs;
+		SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+		UPackage::SavePackage(Package, MIC, *PackageFileName, SaveArgs);
+	}
+
+	if (TargetMesh)
+	{
+		TargetMesh->SetMaterial(0, MIC);
+	}
+
+	return MIC;
+}
+#endif
 
 FString FAbstractMuseumFileHelper::CalculateFileHash(const TArray<uint8>& Data)
 {

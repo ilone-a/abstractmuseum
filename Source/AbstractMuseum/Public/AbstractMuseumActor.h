@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "ArtInteractInterface.h"
+#include "InfoComponent.h"
 #include "AbstractMuseumActor.generated.h"
 
 // Other base structs
@@ -73,10 +73,13 @@ protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
 	TObjectPtr<UDecalComponent> ProjectionDecal;
 
-// camera zoom logic
+	//info
+	UPROPERTY(EditAnywhere, Category = "Info")
+	FAMInfoComponent InfoComponent;
+
+	// camera zoom logic
 	UPROPERTY(VisibleAnywhere, Category = "Default")
 	UCameraComponent* AMCamera;
-
 	FVector DefaultLocation;
 	FRotator DefaultRotation;
 	virtual void OnConstruction(const FTransform& Transform) override;

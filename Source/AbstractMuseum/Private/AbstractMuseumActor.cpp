@@ -8,9 +8,9 @@
 
 AAbstractMuseumActor::AAbstractMuseumActor()
 {
-	//-------Load widget TODO fix path-----
+	//-------Load magnifying glass widget -----
 	static ConstructorHelpers::FClassFinder<UUserWidget> CursorWidgetFinder(
-		TEXT("/Game/UMG/ScaleWidget")
+		TEXT("/AbstractMuseum/UMG/ScaleWidget.ScaleWidget_C")
 	);
 
 	if (CursorWidgetFinder.Succeeded())
@@ -19,7 +19,7 @@ AAbstractMuseumActor::AAbstractMuseumActor()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("ScaleWidget NOT FOUND in AAbstractMuseumActor"));
+		UE_LOG(LogTemp, Error, TEXT("ScaleWidget NOT FOUND in AAbstractMuseum plugin"));
 	}
 	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 }
@@ -75,7 +75,6 @@ void AAbstractMuseumActor::RestartHideTimer()
 //TODO move widget to separate widgets lib
 void AAbstractMuseumActor::ShowCursorWidget()
 {
-	
 	if (!CursorWidgetClass)
 		return;
 
@@ -85,25 +84,21 @@ void AAbstractMuseumActor::ShowCursorWidget()
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (!PC)
 		return;
-
 	ActiveCursorWidget = CreateWidget<UUserWidget>(PC, CursorWidgetClass);
-
 	if (ActiveCursorWidget)
-		ActiveCursorWidget->AddToViewport(9999);   // on top of all widgets
-		
+		ActiveCursorWidget->AddToViewport(9999);   // on top of all widgets		
 }
 
 void AAbstractMuseumActor::HideCursorWidget()
-{
-	
+{	
 	if (ActiveCursorWidget)
 	{
 		ActiveCursorWidget->RemoveFromParent();
 		ActiveCursorWidget = nullptr;
 	}
-	bWidgetCreated = false; // <-- Reset для DoN
+	bWidgetCreated = false; 
 }
-/////////////////////////
+
 
 void AAbstractMuseumActor::BeginPlay()
 {

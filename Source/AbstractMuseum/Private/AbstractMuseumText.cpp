@@ -39,7 +39,6 @@ static void LoadTextAssetsOnce()
 	if (GConfig)
 	{
 		GConfig->LoadFile(ConfigPath);
-
 		GConfig->GetString(TEXT("AssetPaths"), TEXT("TextPlaneMesh"), PlaneMeshPath, ConfigPath);
 		GConfig->GetString(TEXT("AssetPaths"), TEXT("TextMaterial"), MaterialPath, ConfigPath);
 		GConfig->GetString(TEXT("AssetPaths"), TEXT("CyrillicFont"), FontPath, ConfigPath);
@@ -221,16 +220,8 @@ void AAbstractMuseumText::UpdateLinetrace()
 		EditorProjection.HitLocation = Hit.Location;
 		EditorProjection.Distance = FVector::Dist(Start, Hit.Location);
 		EditorProjection.bHit = true;
-		// Add DrawDebug
-		//DrawDebugLine(World, Start, Hit.Location, FColor::Green, false, 1.0f, 0, 2.0f);
-		//to hit point
-		//DrawDebugPoint(World, Hit.Location, 12.0f, FColor::Red, false, 1.5f);
-		//DrawDebugLine(World, Hit.Location, Hit.Location + Hit.Normal * 50.f, FColor::Blue, false, 1.5f, 0, 1.5f);
 	}
-	//else
-	//{
-		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.f, 0, 1.f);
-	//}
+
 }
 //---Text settings and content---
 bool AAbstractMuseumText::LoadTextFromFile(const FString& FilePath)
@@ -257,7 +248,6 @@ void AAbstractMuseumText::UpdateText()
 	TextComponent->SetText(FText::FromString(TextContent));
 	TextComponent->SetTextRenderColor(TextColor);
 	TextComponent->SetWorldSize(TextScale); // 
-
 	TextComponent->SetFont(Font);
 }
 
@@ -356,8 +346,6 @@ void AAbstractMuseumText::PostEditChangeProperty(FPropertyChangedEvent& Property
 			UpdateText();
 			UpdateTextPlane();
 		}
-
-
 		if (PropertyName == GET_MEMBER_NAME_CHECKED(AAbstractMuseumText, HorizontalAlignment) ||
 			PropertyName == GET_MEMBER_NAME_CHECKED(AAbstractMuseumText, VerticalAlignment))
 		{

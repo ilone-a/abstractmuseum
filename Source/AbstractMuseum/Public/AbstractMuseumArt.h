@@ -12,17 +12,7 @@ class USceneComponent;
 class UStaticMeshComponent;
 class UMaterialInstanceDynamic;
 class UMaterialInstance;
-
-
-UCLASS(BlueprintType)
-class ABSTRACTMUSEUM_API UArtMaterialStruct : public UDataAsset
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default")
-	UMaterialInterface* BaseMaterial;
-};
+class UMaterialInstanceConstant;
 
 UCLASS()
 class ABSTRACTMUSEUM_API AAbstractMuseumArt : public AAbstractMuseumActor
@@ -32,16 +22,12 @@ class ABSTRACTMUSEUM_API AAbstractMuseumArt : public AAbstractMuseumActor
 public:
 
 	AAbstractMuseumArt();
-	//---Material---
+
+	//---Material asset and base---
 	UPROPERTY(EditAnywhere, Category = "Texture Loader")
-	UArtMaterialStruct* ArtMaterialStruct;
-
-	UPROPERTY(Transient)
-	UMaterialInstanceDynamic* ArtMaterial;
-
-	UPROPERTY()
-	UTexture2D* LoadedTexture;
-	void CreateDynamicMaterial();
+	UMaterialInterface* BaseMaterial;
+	UPROPERTY(EditAnywhere, Category = "Material")
+	UMaterialInstanceConstant* ArtMaterialAsset;
 	void ApplyTexture();
 	virtual void ScaleMeshes() override;// Scale all meshes to art picture size
 
@@ -69,13 +55,12 @@ public:
 	bool bCameraLocked = false;
 	virtual void LockCameraToThing() override;
 	virtual void UnlockCameraFromThing() override;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
+	TObjectPtr<UStaticMeshComponent> Plane;
 
 protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
-
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
-	TObjectPtr<UStaticMeshComponent> Plane;
 
 	TObjectPtr<UDecalComponent> ProjectionDecal;
 	APlayerController* PC = nullptr;

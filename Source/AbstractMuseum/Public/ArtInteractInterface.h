@@ -11,14 +11,12 @@ class UArtInteractInterface : public UInterface
 };
 
 
-class IArtInteractInterface 
+class IArtInteractInterface
 {
 	GENERATED_BODY()
-
 public:
-
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Art)
-	void ArtOnInteract() ;
+	void ArtOnInteract();
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Art)
-	 void ArtOnFocus();
+	void ArtOnFocus();
 };

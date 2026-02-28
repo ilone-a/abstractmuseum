@@ -1,5 +1,4 @@
 #include "../Public/AbstractMuseumItem.h"
-
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"

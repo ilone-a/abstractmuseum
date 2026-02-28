@@ -10,9 +10,7 @@ class AAbstractMuseumActor;
 class AAbstractMuseumArt;
 class AAbstractMuseumText;
 class AAbstractMuseumItem;
-/**
- * 
- */
+
 UCLASS()
 class ABSTRACTMUSEUM_API AAbstractMuseumProjectionLogic : public AInfo
 {
@@ -32,15 +30,9 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 #if WITH_EDITOR
 	bool bEditorHookRegistered = false;
-
 #endif
 	
-
 private:
-	//Abstract Museum actor child array
-	UPROPERTY() TArray <AAbstractMuseumActor*> AMActors;
-	void CollectAbstractMuseumActors();
-
 #if WITH_EDITOR
 	void RegisterEditorSelect();
 #endif
