@@ -270,3 +270,17 @@ bool FAbstractMuseumFileHelper::IsFileChanged(const FString& FilePath, const FSt
 	FString NewHash = CalculateFileHash(FileData);
 	return !(NewHash == OldHash);
 }
+
+FString FAbstractMuseumFileHelper::CalculateFileHashFromPath(const FString& FilePath)
+{
+	TArray<uint8> FileData;
+	if (!FFileHelper::LoadFileToArray(FileData, *FilePath))
+	{
+		UE_LOG(LogTemp, Error, TEXT("IsFileChanged: Cannot read file %s"), *FilePath);
+		return FString();
+	}
+
+	FSHAHash Hash;
+	FSHA1::HashBuffer(FileData.GetData(), FileData.Num(), Hash.Hash);
+	return Hash.ToString();
+}

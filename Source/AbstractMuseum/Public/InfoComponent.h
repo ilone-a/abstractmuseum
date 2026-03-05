@@ -13,37 +13,16 @@ struct FAMInfoComponent {
 	FName InventoryID;
 	UPROPERTY(EditAnywhere, Category = "Default")
 	FName Title;
-	//enum ObjectType (enum: Painting, Sculpture, Object, etc.)
-	UPROPERTY(EditAnywhere, Category = "Default")
+
+		// object description
+	UPROPERTY(EditAnywhere, Category = "Additional")
+	FString Description;
+	UPROPERTY(EditAnywhere, Category = "Additional")
+	bool bShowDescription = true;
+	UPROPERTY(EditAnywhere, Category = "Additional")
 	int Date;
-	UPROPERTY(EditAnywhere, Category = "Default")
-	FString Note;
-};
+	// where from
+	UPROPERTY(EditAnywhere, Category = "Additional")
+	FString Source;
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class ABSTRACTMUSEUM_API UAMShowComponent : public UActorComponent {
-	GENERATED_BODY()
-public:
-	UAMShowComponent() {};
-
-	UPROPERTY(BlueprintReadOnly, Category = "Show")
-	FTransform ActorInGalleryTransform;
-	//todo: create entity for the room in galery
-	//not a real fstring, must be pointer
-	UPROPERTY(EditAnywhere, Category = "Show")
-	FString LinkToGallery;
-};
-
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class ABSTRACTMUSEUM_API UAMStorageComponent : public UActorComponent {
-	GENERATED_BODY()
-public:
-	UAMStorageComponent() {};
-
-	UPROPERTY(BlueprintReadOnly, Category = "Show")
-	FTransform ActorInGalleryTransform;
-	//todo: create entity for the room in galery
-	//not a real fstring, must be pointer
-	UPROPERTY(EditAnywhere, Category = "Show")
-	FString LinkToGallery;
 };

@@ -28,5 +28,6 @@ public:
 	//----Hash---
 	static FString CalculateFileHash(const TArray<uint8>& Data);
 	static bool IsFileChanged(const FString& FilePath, const FString& OldHash);
+	FString CalculateFileHashFromPath(const FString& FilePath);
 };
 

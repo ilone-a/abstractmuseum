@@ -57,9 +57,9 @@ public:
 	FString LocalFilePath;
 
 	//non-overridable
-	void SetHash(const FString& FileHash);
-	FString& GetHash() { return FileHash; }
-	const FString& GetHash() const { return FileHash; }
+	void SetHash(const FString& SourceFileHash);
+	FString& GetHash() { return SourceFileHash; }
+	const FString& GetHash() const { return SourceFileHash; }
 
 	FLinetraceProjectionData EditorProjection;
 	UPROPERTY(EditAnywhere, Category = "Projection")
@@ -100,7 +100,7 @@ protected:
 	void HideCursorWidget();
 
 private:
-	FString FileHash;
+	FString SourceFileHash;
 
 };
 

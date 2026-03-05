@@ -323,6 +323,7 @@ void FMuseumTextCustomization::OnPathPicked(const FString& PickedPath)
 			if (!TargetText->TextContent.IsEmpty())
 			{
 				TargetText->UpdateText();
+				TArray<uint8> FileData;
 			}
 		}
 	}

@@ -35,7 +35,7 @@ void UAbstractMuseumSettings::LoadSettings() {
 	GConfig->GetFloat(TEXT("Default Variables"), TEXT("TextWorldScale"), TextWorldScale, ConfigPath);
 	GConfig->GetFloat(TEXT("Default Variables"), TEXT("TextPlaneScaleOffset"), TextPlaneScaleOffset, ConfigPath);
 	GConfig->GetInt(TEXT("Default Variables"), TEXT("TextMaxLen"), TextMaxLen, ConfigPath);
-	GConfig->GetInt(TEXT("Default Variables"), TEXT("StringMaxLen"), StringMaxLen, ConfigPath);
+	GConfig->GetInt(TEXT("Default Variables"), TEXT("StringMFaxLen"), StringMaxLen, ConfigPath);
 
 }
 
