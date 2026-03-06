@@ -120,80 +120,64 @@ FString FAbstractMuseumFileHelper::LoadTextFileFromDisk(const FString& FilePath,
 }
 
 #if WITH_EDITOR
-UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& SourceFilePath, const FString& AssetName, const FString& PackagePath)
+UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(
+	const FString& SourceFilePath,
+	const FString& AssetName,
+	const FString& PackagePath)
 {
 	if (!FPaths::FileExists(SourceFilePath))
 		return nullptr;
 
 	const FString FullPackagePath = PackagePath + TEXT("/") + AssetName;
+	const FString ObjectPath = FullPackagePath + TEXT(".") + AssetName;
 
-	//Get if exists
-	if (UTexture2D* Existing = LoadObject<UTexture2D>(nullptr, *FullPackagePath))
-		return Existing;
+	UTexture2D* Texture =
+		LoadObject<UTexture2D>(nullptr, *ObjectPath);
 
-	UPackage* Package = CreatePackage(*FullPackagePath);
-	if (!Package)
-		return nullptr;
-
-	Package->FullyLoad();
-
-	UTextureFactory* Factory = NewObject<UTextureFactory>();
-	Factory->AddToRoot(); //for  GC
-	Factory->SuppressImportOverwriteDialog();
-
-	Factory->bCreateMaterial = false;
-	Factory->bEditorImport = true;
-
-	const uint8* Buffer = nullptr;
 	TArray<uint8> FileData;
-
 	if (!FFileHelper::LoadFileToArray(FileData, *SourceFilePath))
 		return nullptr;
 
-	Buffer = FileData.GetData();
+	IImageWrapperModule& ImageWrapperModule =
+		FModuleManager::LoadModuleChecked<IImageWrapperModule>("ImageWrapper");
 
-	UTexture2D* ImportedTexture = Cast<UTexture2D>(
-		Factory->FactoryCreateBinary(
-			UTexture2D::StaticClass(),
-			Package,
-			*AssetName,
-			RF_Public | RF_Standalone,
-			nullptr,
-			*FPaths::GetExtension(SourceFilePath),
-			Buffer,
-			Buffer + FileData.Num(),
-			GWarn
-		)
+	EImageFormat Format = ImageWrapperModule.DetectImageFormat(
+		FileData.GetData(),
+		FileData.Num()
 	);
 
-	if (!ImportedTexture)
+	TSharedPtr<IImageWrapper> Wrapper =
+		ImageWrapperModule.CreateImageWrapper(Format);
+
+	if (!Wrapper.IsValid())
 		return nullptr;
 
-	//RegistryModule
-	FAssetRegistryModule::AssetCreated(ImportedTexture);
-	ImportedTexture->MarkPackageDirty();
-	Package->MarkPackageDirty();
+	if (!Wrapper->SetCompressed(FileData.GetData(), FileData.Num()))
+		return nullptr;
 
-	const FString PackageFileName =
-		FPackageName::LongPackageNameToFilename(
-			FullPackagePath,
-			FPackageName::GetAssetPackageExtension()
-		);
+	TArray<uint8> RawData;
+	if (!Wrapper->GetRaw(ERGBFormat::BGRA, 8, RawData))
+		return nullptr;
 
-	FSavePackageArgs SaveArgs;
-	SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+	int32 Width = Wrapper->GetWidth();
+	int32 Height = Wrapper->GetHeight();
 
-	UPackage::SavePackage(
-		Package,
-		ImportedTexture,
-		*PackageFileName,
-		SaveArgs
+	Texture->Source.Init(
+		Width,
+		Height,
+		1,
+		1,
+		TSF_BGRA8,
+		RawData.GetData()
 	);
 
-	Factory->RemoveFromRoot();
+	Texture->UpdateResource();
+	Texture->PostEditChange();
+	Texture->MarkPackageDirty();
 
-	return ImportedTexture;
+	return Texture;
 }
+
 
 UMaterialInstanceConstant* FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(UObject* Owner, UMaterialInterface* BaseMaterial, UMeshComponent* TargetMesh)
 {
@@ -251,23 +235,17 @@ UMaterialInstanceConstant* FAbstractMuseumFileHelper::CreateOrGetMaterialInstanc
 	return MIC;
 }
 #endif
-
+/*
 FString FAbstractMuseumFileHelper::CalculateFileHash(const TArray<uint8>& Data)
 {
 	FSHAHash Hash;
 	FSHA1::HashBuffer(Data.GetData(), Data.Num(), Hash.Hash);
 	return Hash.ToString();
-}
+}*/
 
 bool FAbstractMuseumFileHelper::IsFileChanged(const FString& FilePath, const FString& OldHash)
 {
-	TArray<uint8> FileData;
-	if (!FFileHelper::LoadFileToArray(FileData, *FilePath))
-	{
-		UE_LOG(LogTemp, Error, TEXT("IsFileChanged: Cannot read file %s"), *FilePath);
-		return true; // if no file - hash changed
-	}
-	FString NewHash = CalculateFileHash(FileData);
+	FString NewHash = CalculateFileHashFromPath(FilePath);
 	return !(NewHash == OldHash);
 }
 

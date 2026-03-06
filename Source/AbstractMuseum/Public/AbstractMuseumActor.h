@@ -100,6 +100,7 @@ protected:
 	void HideCursorWidget();
 
 private:
+	UPROPERTY()
 	FString SourceFileHash;
 
 };

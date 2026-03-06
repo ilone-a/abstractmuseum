@@ -223,60 +223,112 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 
 	const FString FullPath = FPaths::ConvertRelativePathToFull(PickedPath);
 
-	TargetArt->Modify(); // save changes
-	TargetArt->LocalFilePath = FullPath;
-	TargetArt->MarkPackageDirty();
+	FString Hash = TargetArt->GetHash();
+	//check if nothing changed
+	const bool bPathChanged = (TargetArt->LocalFilePath != FullPath);
+	const bool bFileChanged = FAbstractMuseumFileHelper::IsFileChanged(FullPath, Hash);
+	if (!bPathChanged && !bFileChanged) return;
 
-	//Create asset name
-	const FString StableBaseName =
-		FPackageName::GetShortName(
-			TargetArt->GetName()
+	//if changed
+	//if ((TargetArt->LocalFilePath != PickedPath) || (FAbstractMuseumFileHelper::IsFileChanged(PickedPath, Hash)))
+
+	{
+
+		TargetArt->Modify(); // save changes
+		TargetArt->LocalFilePath = FullPath;
+		TargetArt->MarkPackageDirty();
+
+		//Create asset name
+		const FString StableBaseName = FPackageName::GetShortName(TargetArt->GetName());
+		const FString TextureAssetName = FString::Printf(TEXT("TEX_%s"), *StableBaseName);
+
+		//Import file to save to texture
+		//UTexture2D* Texture = nullptr;
+		TargetArt->Modify();
+		TargetArt->LocalFilePath = FullPath;
+
+
+
+		UTexture2D* SavedTexture = nullptr;
+
+		// ----------------------------
+		// CASE 1 Ч новый путь
+		// ----------------------------
+		if (bPathChanged)
+		{
+			SavedTexture =
+				FAbstractMuseumFileHelper::ImportTextureAsAsset(
+					FullPath,
+					TextureAssetName,
+					TEXT("/Game/AbstractMuseum/GeneratedTextures")
+				);
+
+			if (!SavedTexture)
+				return;
+
+			UMaterialInstanceConstant* MIC =
+				FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(
+					TargetArt,
+					TargetArt->BaseMaterial,
+					TargetArt->Plane
+				);
+
+			if (!MIC)
+				return;
+
+			TargetArt->ArtMaterialAsset = MIC;
+
+			FMaterialParameterInfo ParamInfo(TEXT("Art"));
+			MIC->SetTextureParameterValueEditorOnly(ParamInfo, SavedTexture);
+
+			MIC->PostEditChange();
+			MIC->MarkPackageDirty();
+
+			if (TargetArt->Plane)
+			{
+				TargetArt->Plane->SetMaterial(0, MIC);
+			}
+		}
+
+		// ----------------------------
+		// CASE 2 Ч файл изменилс€
+		// ----------------------------
+		else if (bFileChanged)
+		{
+			SavedTexture =
+				FAbstractMuseumFileHelper::ImportTextureAsAsset(
+					FullPath,
+					TextureAssetName,
+					TEXT("/Game/AbstractMuseum/GeneratedTextures")
+				);
+
+			if (!SavedTexture)
+				return;
+
+			SavedTexture->PostEditChange();
+			SavedTexture->MarkPackageDirty();
+		}
+
+		// ----------------------------
+		// обща€ часть
+		// ----------------------------
+
+		if (SavedTexture &&
+			SavedTexture->GetSizeX() > 0 &&
+			SavedTexture->GetSizeY() > 0)
+		{
+			TargetArt->ScaleMeshes();
+		}
+
+		TargetArt->SetHash(
+			FAbstractMuseumFileHelper::CalculateFileHashFromPath(FullPath)
 		);
 
-	const FString TextureAssetName =
-		FString::Printf(TEXT("TEX_%s"), *StableBaseName);
-
-	//Import file to save to texture
-	UTexture2D* SavedTexture =
-		FAbstractMuseumFileHelper::ImportTextureAsAsset(
-			FullPath,
-			TextureAssetName,
-			TEXT("/Game/AbstractMuseum/GeneratedTextures")
-		);
-
-	if (!SavedTexture)
-		return;
-	//Get or create MIC
-	UMaterialInstanceConstant* MIC =
-		FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(TargetArt, TargetArt->BaseMaterial, TargetArt->Plane);
-
-	if (!MIC)
-		return;
-
-	TargetArt->ArtMaterialAsset = MIC;
-
-	//Update Art parameter in Material
-	FMaterialParameterInfo ParamInfo(TEXT("Art"));
-	MIC->SetTextureParameterValueEditorOnly(ParamInfo, SavedTexture);
-	MIC->PostEditChange();
-	MIC->MarkPackageDirty();
-
-	if (TargetArt->Plane)
-	{
-		TargetArt->Plane->SetMaterial(0, MIC);
-	}
-
-	if (SavedTexture->GetSizeX() > 0 &&
-		SavedTexture->GetSizeY() > 0)
-	{
-		TargetArt->ScaleMeshes();
-	}
-
-	TargetArt->MarkPackageDirty();
-	TargetArt->GetOutermost()->MarkPackageDirty();
-
+		TargetArt->MarkPackageDirty();
+		TargetArt->GetOutermost()->MarkPackageDirty();
 
 #endif
+	}
 }
 
 FString FMuseumArtCustomization::GetSelectedFilePath() const
