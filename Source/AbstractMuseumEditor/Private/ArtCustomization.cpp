@@ -252,7 +252,7 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 		UTexture2D* SavedTexture = nullptr;
 
 		// ----------------------------
-		// CASE 1 Ч новый путь
+		// CASE 1 Ч NEW PATH
 		// ----------------------------
 		if (bPathChanged)
 		{
@@ -291,7 +291,7 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 		}
 
 		// ----------------------------
-		// CASE 2 Ч файл изменилс€
+		// CASE 2 Ч CHANGED FILE
 		// ----------------------------
 		else if (bFileChanged)
 		{
@@ -310,7 +310,7 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 		}
 
 		// ----------------------------
-		// обща€ часть
+		// COMMON PART
 		// ----------------------------
 
 		if (SavedTexture &&
