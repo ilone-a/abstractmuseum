@@ -162,6 +162,9 @@ UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(
 	int32 Width = Wrapper->GetWidth();
 	int32 Height = Wrapper->GetHeight();
 
+	if (!Texture)
+		return nullptr;
+	
 	Texture->Source.Init(
 		Width,
 		Height,
