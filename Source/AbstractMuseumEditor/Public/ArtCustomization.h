@@ -28,4 +28,5 @@ private:
 	AAbstractMuseumArt* TargetArt = nullptr;
 	void OnPathPicked(const FString& PickedPath);
 	FString GetSelectedFilePath() const;
+	void ChangeTexture( UTexture2D* SavedTexture, FString NewImageSourcePath, FString TextureAssetName);
 };

@@ -8,7 +8,6 @@
 #include "PropertyCustomizationHelpers.h"
 #include "EditorStyleSet.h"
 #include "Misc/Paths.h"
-#include "AbstractMuseumFileHelper.h"
 #include "CustomWidgetsHelper.h"
 #include "Widgets/Input/SSlider.h"
 #include "Widgets/Input/SNumericEntryBox.h"
@@ -29,7 +28,7 @@ void FMuseumArtCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuild
 	TargetArt = Cast<AAbstractMuseumArt>(Objects[0].Get());
 	if (!TargetArt) return;
 	CachedDetailBuilder = &DetailBuilder;
-	AlwaysVisible = { "Texture Loader", "View Options", "Projection", "Frame", "Info"};
+	AlwaysVisible = { "Texture Loader", "View Options", "Projection", "Frame", "Info" };
 
 	//----Hide all categories except our AlwaysVisible list---
 	DetailBuilder.GetCategoryNames(AllCategories);
@@ -218,101 +217,40 @@ void FMuseumArtCustomization::OnShowDefaultsChanged(IDetailLayoutBuilder* Detail
 void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 {
 #if WITH_EDITOR
-	if (!TargetArt)
+	if (!TargetArt) {
+		UE_LOG(LogTemp, Error, TEXT("Unable to change path: actor file missing"));
 		return;
+	}
 
-	const FString FullPath = FPaths::ConvertRelativePathToFull(PickedPath);
+	//source image path
+	const FString NewImageSourcePath = FPaths::ConvertRelativePathToFull(PickedPath);
+	FString CurrentHash = TargetArt->GetHash();
 
-	FString Hash = TargetArt->GetHash();
-	//check if nothing changed
-	const bool bPathChanged = (TargetArt->LocalFilePath != FullPath);
-	const bool bFileChanged = FAbstractMuseumFileHelper::IsFileChanged(FullPath, Hash);
+	//Create asset name
+	const FString StableBaseName = FPackageName::GetShortName(TargetArt->GetName());
+	const FString TextureAssetName = FString::Printf(TEXT("TEX_%s"), *StableBaseName);
+
+
+	const FString FullPackagePath = NewImageSourcePath + TEXT("/") + TextureAssetName;
+	const FString ObjectPath = FullPackagePath + TEXT(".") + TextureAssetName;
+
+	//if assets exists, check nothing changed
+	const bool bPathChanged = (TargetArt->LocalFilePath != NewImageSourcePath);
+	const bool bFileChanged = FAbstractMuseumFileHelper::IsFileChanged(NewImageSourcePath, CurrentHash);
+
 	if (!bPathChanged && !bFileChanged) return;
 
-	//if changed
-	//if ((TargetArt->LocalFilePath != PickedPath) || (FAbstractMuseumFileHelper::IsFileChanged(PickedPath, Hash)))
-
 	{
-
 		TargetArt->Modify(); // save changes
-		TargetArt->LocalFilePath = FullPath;
+		//TODO setter
+		TargetArt->LocalFilePath = NewImageSourcePath;
 		TargetArt->MarkPackageDirty();
-
-		//Create asset name
-		const FString StableBaseName = FPackageName::GetShortName(TargetArt->GetName());
-		const FString TextureAssetName = FString::Printf(TEXT("TEX_%s"), *StableBaseName);
-
-		//Import file to save to texture
-		//UTexture2D* Texture = nullptr;
-		TargetArt->Modify();
-		TargetArt->LocalFilePath = FullPath;
-
-
 
 		UTexture2D* SavedTexture = nullptr;
 
-		// ----------------------------
-		// CASE 1 — NEW PATH
-		// ----------------------------
-		if (bPathChanged)
-		{
-			SavedTexture =
-				FAbstractMuseumFileHelper::ImportTextureAsAsset(
-					FullPath,
-					TextureAssetName,
-					TEXT("/Game/AbstractMuseum/GeneratedTextures")
-				);
+		ChangeTexture(SavedTexture, NewImageSourcePath, TextureAssetName);
 
-			if (!SavedTexture)
-				return;
-
-			UMaterialInstanceConstant* MIC =
-				FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(
-					TargetArt,
-					TargetArt->BaseMaterial,
-					TargetArt->Plane
-				);
-
-			if (!MIC)
-				return;
-
-			TargetArt->ArtMaterialAsset = MIC;
-
-			FMaterialParameterInfo ParamInfo(TEXT("Art"));
-			MIC->SetTextureParameterValueEditorOnly(ParamInfo, SavedTexture);
-
-			MIC->PostEditChange();
-			MIC->MarkPackageDirty();
-
-			if (TargetArt->Plane)
-			{
-				TargetArt->Plane->SetMaterial(0, MIC);
-			}
-		}
-
-		// ----------------------------
-		// CASE 2 — CHANGED FILE
-		// ----------------------------
-		else if (bFileChanged)
-		{
-			SavedTexture =
-				FAbstractMuseumFileHelper::ImportTextureAsAsset(
-					FullPath,
-					TextureAssetName,
-					TEXT("/Game/AbstractMuseum/GeneratedTextures")
-				);
-
-			if (!SavedTexture)
-				return;
-
-			SavedTexture->PostEditChange();
-			SavedTexture->MarkPackageDirty();
-		}
-
-		// ----------------------------
-		// COMMON PART
-		// ----------------------------
-
+		// Update TargetArt data
 		if (SavedTexture &&
 			SavedTexture->GetSizeX() > 0 &&
 			SavedTexture->GetSizeY() > 0)
@@ -321,9 +259,8 @@ void FMuseumArtCustomization::OnPathPicked(const FString& PickedPath)
 		}
 
 		TargetArt->SetHash(
-			FAbstractMuseumFileHelper::CalculateFileHashFromPath(FullPath)
+			FAbstractMuseumFileHelper::CalculateFileHashFromPath(NewImageSourcePath)
 		);
-
 		TargetArt->MarkPackageDirty();
 		TargetArt->GetOutermost()->MarkPackageDirty();
 
@@ -338,4 +275,49 @@ FString FMuseumArtCustomization::GetSelectedFilePath() const
 		FilePath = TargetArt->LocalFilePath;
 	}
 	return FilePath;
+}
+
+void FMuseumArtCustomization::ChangeTexture(UTexture2D* SavedTexture, FString NewImageSourcePath, FString TextureAssetName)
+{
+
+	SavedTexture =
+		FAbstractMuseumFileHelper::ImportTextureAsAsset(
+			NewImageSourcePath,
+			TextureAssetName,
+			TEXT("/Game/AbstractMuseum/GeneratedTextures")
+		);
+
+	if (!SavedTexture) 
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to import texture as asset"));
+		return;
+	}
+
+	UMaterialInstanceConstant* MIC =
+		FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(
+			TargetArt,
+			TargetArt->BaseMaterial,
+			TargetArt->Plane
+		);
+
+	if (!MIC)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to import material instance as asset"));
+		return;
+	}
+
+	TargetArt->ArtMaterialAsset = MIC;
+
+	FMaterialParameterInfo ParamInfo(TEXT("Art"));
+	MIC->SetTextureParameterValueEditorOnly(ParamInfo, SavedTexture);
+
+	MIC->PostEditChange();
+	MIC->MarkPackageDirty();
+
+	if (TargetArt->Plane)
+	{
+		TargetArt->Plane->SetMaterial(0, MIC);
+	}
+	SavedTexture->PostEditChange();
+	SavedTexture->MarkPackageDirty();
 }

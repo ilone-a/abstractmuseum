@@ -24,6 +24,7 @@ public:
 		UMaterialInterface* BaseMaterial,
 		UMeshComponent* TargetMesh
 	);
+	static UTexture2D* CreateOrGetTextureAsset(const FString& PackagePath, const FString& AssetName);
 #endif
 	//----Hash---
 	//static FString CalculateFileHash(const TArray<uint8>& Data);

@@ -132,7 +132,8 @@ UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(
 	const FString ObjectPath = FullPackagePath + TEXT(".") + AssetName;
 
 	UTexture2D* Texture =
-		LoadObject<UTexture2D>(nullptr, *ObjectPath);
+		CreateOrGetTextureAsset( PackagePath, AssetName);
+		//LoadObject<UTexture2D>(nullptr, *ObjectPath);
 
 	TArray<uint8> FileData;
 	if (!FFileHelper::LoadFileToArray(FileData, *SourceFilePath))
@@ -237,7 +238,90 @@ UMaterialInstanceConstant* FAbstractMuseumFileHelper::CreateOrGetMaterialInstanc
 
 	return MIC;
 }
+
+UTexture2D* FAbstractMuseumFileHelper::CreateOrGetTextureAsset(
+	const FString& PackagePath,
+	const FString& AssetName)
+{
+	if (PackagePath.IsEmpty() || AssetName.IsEmpty())
+		return nullptr;
+
+	const FString FullPath = PackagePath + TEXT("/") + AssetName;
+	const FString ObjectPath = FullPath + TEXT(".") + AssetName;
+
+	// check assrt using AssetRegistry
+	FAssetRegistryModule& AssetRegistry =
+		FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+
+	FAssetData AssetData =
+		AssetRegistry.Get().GetAssetByObjectPath(*ObjectPath);
+
+	UTexture2D* Texture = nullptr;
+
+	if (AssetData.IsValid())
+	{
+		Texture = Cast<UTexture2D>(AssetData.GetAsset());
+	}
+	else
+	{
+		// fallback if is not in AssetRegistry
+		Texture = LoadObject<UTexture2D>(nullptr, *ObjectPath);
+	}
+
+	// check if asset is valid
+	if (Texture)
+	{
+		if (Texture->GetSizeX() > 0 &&
+			Texture->GetSizeY() > 0 &&
+			Texture->GetPlatformData())
+		{
+			return Texture; 
+		}
+
+		// remove if not valid
+		Texture->MarkAsGarbage();
+		Texture = nullptr;
+	}
+
+	// create new asset
+	UPackage* Package = CreatePackage(*FullPath);
+	if (!Package)
+		return nullptr;
+
+	Package->FullyLoad();
+
+	Texture = NewObject<UTexture2D>(
+		Package,
+		*AssetName,
+		RF_Public | RF_Standalone
+	);
+
+	if (!Texture)
+		return nullptr;
+
+	// minimal initialization
+	Texture->MipGenSettings = TMGS_NoMipmaps;
+	Texture->SRGB = true;
+
+	FAssetRegistryModule::AssetCreated(Texture);
+	Texture->MarkPackageDirty();
+
+	// save package
+	const FString PackageFileName =
+		FPackageName::LongPackageNameToFilename(
+			FullPath,
+			FPackageName::GetAssetPackageExtension()
+		);
+
+	FSavePackageArgs SaveArgs;
+	SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+
+	UPackage::SavePackage(Package, Texture, *PackageFileName, SaveArgs);
+
+	return Texture;
+}
 #endif
+
 /*
 FString FAbstractMuseumFileHelper::CalculateFileHash(const TArray<uint8>& Data)
 {
