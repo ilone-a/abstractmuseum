@@ -382,14 +382,18 @@ void AAbstractMuseumArt::ScaleMeshes()
 #endif
 
 	UTexture2D* Texture2D = Cast<UTexture2D>(Texture);
-	if (!Texture2D)
+	if (!Texture2D) {
+		UE_LOG(LogTemp, Error, TEXT("ScaleMeshes: invalid texture"));
 		return;
+	}
 
-	const int32 Width = Texture2D->GetSurfaceWidth();
-	const int32 Height = Texture2D->GetSurfaceHeight();
+	const int32 Width = Texture2D->GetImportedSize().X;
+	const int32 Height = Texture2D->GetImportedSize().Y;
 
-	if (Width <= 0 || Height <= 0)
-		return;
+	if (Width <= 0 || Height <= 0) {
+	//UE_LOG(LogTemp, Error, TEXT("ScaleMeshes: invalid texture"));
+	return;
+}
 
 	const float AspectRatio = static_cast<float>(Width) / static_cast<float>(Height);
 	const float BaseScale = 1.0f;

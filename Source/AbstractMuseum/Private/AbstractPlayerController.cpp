@@ -25,7 +25,7 @@ void AStartMenuController::BeginPlay()
 	//---Find BP Start widget---
 	if (!StartMenuClass)
 	{
-		static ConstructorHelpers::FClassFinder<UUserWidget> WidgetBPClass(TEXT("/Game/World/BP_StartMenu"));
+		static ConstructorHelpers::FClassFinder<UUserWidget> WidgetBPClass(TEXT("/Game/UMG/BP_StartMenu"));
 		if (WidgetBPClass.Succeeded())
 		{
 			StartMenuClass = WidgetBPClass.Class;
@@ -33,7 +33,7 @@ void AStartMenuController::BeginPlay()
 	}
 	if (!EndMenuClass)
 	{
-		static ConstructorHelpers::FClassFinder<UUserWidget> EndBP(TEXT("/Game/BP_EndMenu"));
+		static ConstructorHelpers::FClassFinder<UUserWidget> EndBP(TEXT("/Game/UMG/BP_EndMenu"));
 		if (EndBP.Succeeded())
 			EndMenuClass = EndBP.Class;
 	}
@@ -102,6 +102,9 @@ void AStartMenuController::OnStartClicked()
 	Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 
 	SetInputMode(Mode);
+
+	FRotator StartRot = FRotator(0.f, 90.f, 0.f); // start rotation
+	SetControlRotation(StartRot);
 }
 
 void AStartMenuController::ShowEndMenu()

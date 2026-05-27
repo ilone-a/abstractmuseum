@@ -20,3 +20,20 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Art)
 	void ArtOnFocus();
 };
+
+UINTERFACE(MinimalAPI)
+class UEnvInteractInterface : public UInterface
+{
+	GENERATED_BODY()
+};
+
+
+class IEnvInteractInterface
+{
+	GENERATED_BODY()
+public:
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Environment)
+	void EnvOnInteract();
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Environment)
+	void EnvOnFocus();
+};
