@@ -131,10 +131,10 @@ void AAbstractMuseumActor::UnlockCameraFromThing() {
 void AAbstractMuseumActor::ScaleMeshes() {}
 void AAbstractMuseumActor::SetHash(const FString& FileHash_)
 {
-	FileHash = FileHash_;
+	SourceFileHash = FileHash_;
 	UE_LOG(LogTemp, Log, TEXT("[Art] File Hash %s is set (hash: %s) [%s]"),
 		*LocalFilePath,
-		*FileHash,
+		*SourceFileHash,
 		GIsEditor ? TEXT("Editor") : TEXT("Runtime"));
 }
 

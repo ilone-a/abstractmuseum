@@ -120,80 +120,68 @@ FString FAbstractMuseumFileHelper::LoadTextFileFromDisk(const FString& FilePath,
 }
 
 #if WITH_EDITOR
-UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(const FString& SourceFilePath, const FString& AssetName, const FString& PackagePath)
+UTexture2D* FAbstractMuseumFileHelper::ImportTextureAsAsset(
+	const FString& SourceFilePath,
+	const FString& AssetName,
+	const FString& PackagePath)
 {
 	if (!FPaths::FileExists(SourceFilePath))
 		return nullptr;
 
 	const FString FullPackagePath = PackagePath + TEXT("/") + AssetName;
+	const FString ObjectPath = FullPackagePath + TEXT(".") + AssetName;
 
-	//Get if exists
-	if (UTexture2D* Existing = LoadObject<UTexture2D>(nullptr, *FullPackagePath))
-		return Existing;
+	UTexture2D* Texture =
+		CreateOrGetTextureAsset( PackagePath, AssetName);
+		//LoadObject<UTexture2D>(nullptr, *ObjectPath);
 
-	UPackage* Package = CreatePackage(*FullPackagePath);
-	if (!Package)
-		return nullptr;
-
-	Package->FullyLoad();
-
-	UTextureFactory* Factory = NewObject<UTextureFactory>();
-	Factory->AddToRoot(); //for  GC
-	Factory->SuppressImportOverwriteDialog();
-
-	Factory->bCreateMaterial = false;
-	Factory->bEditorImport = true;
-
-	const uint8* Buffer = nullptr;
 	TArray<uint8> FileData;
-
 	if (!FFileHelper::LoadFileToArray(FileData, *SourceFilePath))
 		return nullptr;
 
-	Buffer = FileData.GetData();
+	IImageWrapperModule& ImageWrapperModule =
+		FModuleManager::LoadModuleChecked<IImageWrapperModule>("ImageWrapper");
 
-	UTexture2D* ImportedTexture = Cast<UTexture2D>(
-		Factory->FactoryCreateBinary(
-			UTexture2D::StaticClass(),
-			Package,
-			*AssetName,
-			RF_Public | RF_Standalone,
-			nullptr,
-			*FPaths::GetExtension(SourceFilePath),
-			Buffer,
-			Buffer + FileData.Num(),
-			GWarn
-		)
+	EImageFormat Format = ImageWrapperModule.DetectImageFormat(
+		FileData.GetData(),
+		FileData.Num()
 	);
 
-	if (!ImportedTexture)
+	TSharedPtr<IImageWrapper> Wrapper =
+		ImageWrapperModule.CreateImageWrapper(Format);
+
+	if (!Wrapper.IsValid())
 		return nullptr;
 
-	//RegistryModule
-	FAssetRegistryModule::AssetCreated(ImportedTexture);
-	ImportedTexture->MarkPackageDirty();
-	Package->MarkPackageDirty();
+	if (!Wrapper->SetCompressed(FileData.GetData(), FileData.Num()))
+		return nullptr;
 
-	const FString PackageFileName =
-		FPackageName::LongPackageNameToFilename(
-			FullPackagePath,
-			FPackageName::GetAssetPackageExtension()
-		);
+	TArray<uint8> RawData;
+	if (!Wrapper->GetRaw(ERGBFormat::BGRA, 8, RawData))
+		return nullptr;
 
-	FSavePackageArgs SaveArgs;
-	SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+	int32 Width = Wrapper->GetWidth();
+	int32 Height = Wrapper->GetHeight();
 
-	UPackage::SavePackage(
-		Package,
-		ImportedTexture,
-		*PackageFileName,
-		SaveArgs
+	if (!Texture)
+		return nullptr;
+	
+	Texture->Source.Init(
+		Width,
+		Height,
+		1,
+		1,
+		TSF_BGRA8,
+		RawData.GetData()
 	);
 
-	Factory->RemoveFromRoot();
+	Texture->UpdateResource();
+	Texture->PostEditChange();
+	Texture->MarkPackageDirty();
 
-	return ImportedTexture;
+	return Texture;
 }
+
 
 UMaterialInstanceConstant* FAbstractMuseumFileHelper::CreateOrGetMaterialInstance(UObject* Owner, UMaterialInterface* BaseMaterial, UMeshComponent* TargetMesh)
 {
@@ -250,23 +238,114 @@ UMaterialInstanceConstant* FAbstractMuseumFileHelper::CreateOrGetMaterialInstanc
 
 	return MIC;
 }
+
+UTexture2D* FAbstractMuseumFileHelper::CreateOrGetTextureAsset(
+	const FString& PackagePath,
+	const FString& AssetName)
+{
+	if (PackagePath.IsEmpty() || AssetName.IsEmpty())
+		return nullptr;
+
+	const FString FullPath = PackagePath + TEXT("/") + AssetName;
+	const FString ObjectPath = FullPath + TEXT(".") + AssetName;
+
+	// check assrt using AssetRegistry
+	FAssetRegistryModule& AssetRegistry =
+		FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+
+	FAssetData AssetData =
+		AssetRegistry.Get().GetAssetByObjectPath(*ObjectPath);
+
+	UTexture2D* Texture = nullptr;
+
+	if (AssetData.IsValid())
+	{
+		Texture = Cast<UTexture2D>(AssetData.GetAsset());
+	}
+	else
+	{
+		// fallback if is not in AssetRegistry
+		Texture = LoadObject<UTexture2D>(nullptr, *ObjectPath);
+	}
+
+	// check if asset is valid
+	if (Texture)
+	{
+		if (Texture->GetSizeX() > 0 &&
+			Texture->GetSizeY() > 0 &&
+			Texture->GetPlatformData())
+		{
+			return Texture; 
+		}
+
+		// remove if not valid
+		Texture->MarkAsGarbage();
+		Texture = nullptr;
+	}
+
+	// create new asset
+	UPackage* Package = CreatePackage(*FullPath);
+	if (!Package)
+		return nullptr;
+
+	Package->FullyLoad();
+
+	Texture = NewObject<UTexture2D>(
+		Package,
+		*AssetName,
+		RF_Public | RF_Standalone
+	);
+
+	if (!Texture)
+		return nullptr;
+
+	// minimal initialization
+	Texture->MipGenSettings = TMGS_NoMipmaps;
+	Texture->SRGB = true;
+
+	FAssetRegistryModule::AssetCreated(Texture);
+	Texture->MarkPackageDirty();
+
+	// save package
+	const FString PackageFileName =
+		FPackageName::LongPackageNameToFilename(
+			FullPath,
+			FPackageName::GetAssetPackageExtension()
+		);
+
+	FSavePackageArgs SaveArgs;
+	SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+
+	UPackage::SavePackage(Package, Texture, *PackageFileName, SaveArgs);
+
+	return Texture;
+}
 #endif
 
+/*
 FString FAbstractMuseumFileHelper::CalculateFileHash(const TArray<uint8>& Data)
 {
 	FSHAHash Hash;
 	FSHA1::HashBuffer(Data.GetData(), Data.Num(), Hash.Hash);
 	return Hash.ToString();
-}
+}*/
 
 bool FAbstractMuseumFileHelper::IsFileChanged(const FString& FilePath, const FString& OldHash)
+{
+	FString NewHash = CalculateFileHashFromPath(FilePath);
+	return !(NewHash == OldHash);
+}
+
+FString FAbstractMuseumFileHelper::CalculateFileHashFromPath(const FString& FilePath)
 {
 	TArray<uint8> FileData;
 	if (!FFileHelper::LoadFileToArray(FileData, *FilePath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("IsFileChanged: Cannot read file %s"), *FilePath);
-		return true; // if no file - hash changed
+		return FString();
 	}
-	FString NewHash = CalculateFileHash(FileData);
-	return !(NewHash == OldHash);
+
+	FSHAHash Hash;
+	FSHA1::HashBuffer(FileData.GetData(), FileData.Num(), Hash.Hash);
+	return Hash.ToString();
 }

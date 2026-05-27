@@ -323,6 +323,7 @@ void FMuseumTextCustomization::OnPathPicked(const FString& PickedPath)
 			if (!TargetText->TextContent.IsEmpty())
 			{
 				TargetText->UpdateText();
+				TargetText->SetHash(FAbstractMuseumFileHelper::CalculateFileHashFromPath(PickedPath));
 			}
 		}
 	}
