@@ -71,104 +71,21 @@ void FMuseumArtCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuild
 			})
 	);
 
-	//----Frame Customization
-	IDetailCategoryBuilder& FrameCategory = DetailBuilder.EditCategory("Frame");
-
-	TSharedPtr<IPropertyHandle> FrameVisibleHandle = DetailBuilder.GetProperty(
-		GET_MEMBER_NAME_CHECKED(AAbstractMuseumArt, bIsFrameVisible),
-		AAbstractMuseumArt::StaticClass()
-	);
-
-	FrameCategory.AddProperty(FrameVisibleHandle)
-		.CustomWidget()
-		.NameContent()
-		[
-			FrameVisibleHandle->CreatePropertyNameWidget()
-		]
-		.ValueContent()
-		[
-			SNew(SCheckBox)
-				.IsChecked_Lambda([this, FrameVisibleHandle]()
-					{
-
-						bool bVal = TargetArt->bIsFrameVisible;
-						FrameVisibleHandle->GetValue(bVal);
-						return bVal ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-					})
-				.OnCheckStateChanged_Lambda([this, FrameVisibleHandle](ECheckBoxState NewState)
-					{
-						const bool bNewVal = (NewState == ECheckBoxState::Checked);
-						TargetArt->SetFrameVisible(bNewVal);
-						FrameVisibleHandle->SetValue(bNewVal);
-
-						if (TargetArt && TargetArt->Frame)
-						{
-							TargetArt->Modify();
-							TargetArt->Frame->SetVisibility(bNewVal, true);
-							TargetArt->PostEditChange();
-							TargetArt->MarkPackageDirty();
-						}
-					})
-		];
-
-	//----Frame Border
-
-	TSharedPtr<IPropertyHandle> FrameBorderHandle = DetailBuilder.GetProperty(
-		GET_MEMBER_NAME_CHECKED(AAbstractMuseumArt, FrameBorder),
-		AAbstractMuseumArt::StaticClass()
-	);
 
 
-	FrameCategory.AddProperty(FrameBorderHandle)
-		.CustomWidget()
-		.NameContent()
-		[
-			FrameBorderHandle->CreatePropertyNameWidget()
-		]
-		.ValueContent()
-		.MinDesiredWidth(200.f)
-		[
-			SNew(SNumericEntryBox<float>)
-				.MinValue(0.001f)
-				.MaxValue(0.5f)
-				.MinSliderValue(0.001f)
-				.MaxSliderValue(0.5f)
-				.Value(TargetArt->FrameBorder)
-				.OnValueCommitted_Lambda([this, FrameBorderHandle](float NewValue, ETextCommit::Type)
-					{
-						const float Clamped = FMath::Clamp(NewValue, 0.001f, 0.5f);
-						FrameBorderHandle->SetValue(Clamped);
 
-						if (TargetArt)
-						{
-							TargetArt->FrameBorder = Clamped;
-							TargetArt->UpdateFrame();
-						}
-					})
-		];
+	
 }
 
 FString FMuseumArtCustomization::GetCurrentFrameMaterialPath() const
 {
-	if (TargetArt && TargetArt->Frame)
-	{
-		if (UMaterialInterface* Mat = TargetArt->Frame->GetMaterial(0))
-		{
-			return Mat->GetPathName();
-		}
-	}
+	
 	return FString();
 }
 
 void FMuseumArtCustomization::OnFrameMaterialChanged(const FAssetData& AssetData)
 {
-	if (TargetArt && TargetArt->Frame)
-	{
-		if (UMaterialInterface* Mat = Cast<UMaterialInterface>(AssetData.GetAsset()))
-		{
-			TargetArt->Frame->SetMaterial(0, Mat);
-		}
-	}
+	
 }
 
 

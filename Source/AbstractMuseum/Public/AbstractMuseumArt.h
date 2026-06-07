@@ -35,20 +35,6 @@ public:
 	virtual void UpdateLinetrace() override;
 	bool bIsAttached = false;
 
-	//---Frame---
-	void UpdateFrame();
-	UPROPERTY(EditAnywhere, Category = "Frame")
-	bool bIsFrameVisible;// = true;
-	TObjectPtr<UStaticMeshComponent> Frame;
-	float FrameDepth = 1.0f;
-	UPROPERTY(EditAnywhere, Category = "Frame")
-	float FrameBorder = 0.05f;
-	UPROPERTY(Transient)
-	UMaterialInstanceDynamic* FrameMaterial;
-	UPROPERTY(EditAnywhere, Category = "Frame")
-	UMaterialInterface* FrameBaseMaterial;
-	void CreateDynamicFrameMaterial();
-	void SetFrameVisible(bool bVisible);
 
 	//--Camera--
 	virtual void CalculateCameraPositionEditor() override;
@@ -62,7 +48,7 @@ protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
-	TObjectPtr<UDecalComponent> ProjectionDecal;
+	//TObjectPtr<UDecalComponent> ProjectionDecal;
 	APlayerController* PC = nullptr;
 	APawn* PlayerPawn = nullptr;
 
