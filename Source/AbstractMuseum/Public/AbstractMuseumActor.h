@@ -70,7 +70,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
 	TObjectPtr<USceneComponent> Origin;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TObjectPtr<UDecalComponent> ProjectionDecal;
 
 	//info
