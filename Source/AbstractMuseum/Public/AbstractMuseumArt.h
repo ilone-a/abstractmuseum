@@ -43,7 +43,6 @@ protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
-	//TObjectPtr<UDecalComponent> ProjectionDecal;
 	APlayerController* PC = nullptr;
 	APawn* PlayerPawn = nullptr;
 

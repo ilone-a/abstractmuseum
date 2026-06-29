@@ -1,9 +1,9 @@
+#pragma once
 #include "AbstractMuseumActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h" 
 #include "UObject/ConstructorHelpers.h"
-//#include "Components/DecalComponent.h"
 #include "AbstractMuseumSettings.h"
 
 AAbstractMuseumActor::AAbstractMuseumActor()

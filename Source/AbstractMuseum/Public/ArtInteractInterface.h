@@ -10,7 +10,6 @@ class UArtInteractInterface : public UInterface
 	GENERATED_BODY()
 };
 
-
 class IArtInteractInterface
 {
 	GENERATED_BODY()
@@ -26,7 +25,6 @@ class UEnvInteractInterface : public UInterface
 {
 	GENERATED_BODY()
 };
-
 
 class IEnvInteractInterface
 {

@@ -1,5 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+#pragma once
 #include "AbstractMuseumArt.h"
 #include "AbstractPlayerController.h"
 #include "AbstractMuseumSettings.h"
@@ -37,7 +36,6 @@ void LoadArtAssetsOnce()
 		return;
 
 	GConfig->LoadFile(ConfigPath);
-
 	// --- Plane Mesh ---
 	if (!CachedArtPlaneMesh)
 	{
@@ -66,20 +64,16 @@ AAbstractMuseumArt::AAbstractMuseumArt()
 	AMCamera->SetupAttachment(RootComponent);
 
 	if (AMCamera) { AMCamera->SetupAttachment(Origin); }
-
-
 	//Art texture storage and placement
 	Plane = CreateDefaultSubobject<UStaticMeshComponent>("Plane");
 	check(Plane);
 	Plane->SetupAttachment(Origin);
-
 	//plane mesh
 	LoadArtAssetsOnce();
 
 	if (Plane && CachedArtPlaneMesh)
 	{
 		Plane->SetStaticMesh(CachedArtPlaneMesh);
-
 		Plane->SetRelativeLocation(FVector(0.0f, 0.01f, 0.0f));//fix overlay material
 		Plane->SetRenderCustomDepth(true);
 		Plane->SetTranslucentSortPriority(1);
@@ -88,7 +82,6 @@ AAbstractMuseumArt::AAbstractMuseumArt()
 		Plane->SetGenerateOverlapEvents(false); //
 		Plane->SetNotifyRigidBodyCollision(false);
 		Plane->SetCollisionResponseToAllChannels(ECR_Block);
-
 	}
 	else
 	{
@@ -99,9 +92,6 @@ AAbstractMuseumArt::AAbstractMuseumArt()
 void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-
-
-
 	if (!Plane)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Plane is NULL in OnConstruction"));
@@ -112,8 +102,6 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 		Plane->SetMaterial(0, ArtMaterialAsset);
 		ScaleMeshes();
 	}
-
-
 	{
 #if WITH_EDITOR
 		CalculateCameraPositionEditor();
@@ -121,7 +109,6 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 	}
 
 }
-
 void AAbstractMuseumArt::BeginPlay()
 {
 	Super::BeginPlay();
@@ -152,9 +139,7 @@ void AAbstractMuseumArt::BeginPlay()
 //-------Camera actions-----
 void AAbstractMuseumArt::CalculateCameraPositionEditor()
 {
-
 	const FBoxSphereBounds Bounds = Plane->Bounds;
-
 	const float HalfHeight = Bounds.BoxExtent.Z;
 	const float HalfWidth = Bounds.BoxExtent.Y;
 
@@ -259,13 +244,11 @@ void AAbstractMuseumArt::ScaleMeshes()
 	Plane->SetRelativeScale3D(PlaneScale);
 	Plane->UpdateBounds();
 }
-
 #if WITH_EDITOR
 void AAbstractMuseumArt::PostEditMove(bool bFinished)
 {
 	Super::PostEditMove(bFinished);
 }
-
 void AAbstractMuseumArt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);

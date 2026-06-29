@@ -23,6 +23,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Default")
 	TSoftObjectPtr<UStaticMesh> MeshAsset;
 
+	bool bCameraLocked = false;
+	virtual void LockCameraToThing() override;
+	virtual void UnlockCameraFromThing() override;
+
 protected:
 	virtual void BeginPlay() override;
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
