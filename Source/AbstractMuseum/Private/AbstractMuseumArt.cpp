@@ -22,7 +22,6 @@
 #include "Misc/FileHelper.h"
 
 static UStaticMesh* CachedArtPlaneMesh = nullptr;
-//static UStaticMesh* CachedFrameCubeMesh = nullptr;
 
 void LoadArtAssetsOnce()
 {
@@ -53,22 +52,6 @@ void LoadArtAssetsOnce()
 				UE_LOG(LogTemp, Warning, TEXT("Failed to load ArtPlaneMesh from path: %s"), *PlaneMeshPath);
 		}
 	}
-
-	// --- Frame Cube Mesh ---
-	/*
-	if (!CachedFrameCubeMesh)
-	{
-		FString FrameMeshPath;
-		GConfig->GetString(TEXT("AssetPaths"), TEXT("ArtFrameMesh"), FrameMeshPath, ConfigPath);
-		if (!FrameMeshPath.IsEmpty())
-		{
-			CachedFrameCubeMesh = Cast<UStaticMesh>(
-				StaticLoadObject(UStaticMesh::StaticClass(), nullptr, *FrameMeshPath)
-			);
-			if (!CachedFrameCubeMesh)
-				UE_LOG(LogTemp, Warning, TEXT("Failed to load ArtFrameMesh from path: %s"), *FrameMeshPath);
-		}
-	}*/
 }
 
 AAbstractMuseumArt::AAbstractMuseumArt()
@@ -142,7 +125,6 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 void AAbstractMuseumArt::BeginPlay()
 {
 	Super::BeginPlay();
-
 	// PlayerController
 	PC = GetWorld()->GetFirstPlayerController();
 	if (PC)
@@ -156,13 +138,11 @@ void AAbstractMuseumArt::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("ArtMaterialStruct/BaseMaterial/Plane not set"));
 		return;
 	}
-
 	if (ArtMaterialAsset)
 	{
 		Plane->SetMaterial(0, ArtMaterialAsset);
 		ScaleMeshes();
 	}
-
 	// camera settings
 	if (AMCamera)
 	{

@@ -8,28 +8,6 @@
 #include "InfoComponent.h"
 #include "AbstractMuseumActor.generated.h"
 
-// Other base structs
-USTRUCT(BlueprintType)
-struct FLinetraceProjectionData
-{
-	GENERATED_BODY()
-
-	FVector TraceStart;
-	FVector TraceEnd;
-	FVector HitLocation;
-
-	bool bHit = false;
-
-	float Distance = 0.0f;
-	FLinetraceProjectionData()
-		: TraceStart(FVector::ZeroVector)
-		, TraceEnd(FVector::ZeroVector)
-		, HitLocation(FVector::ZeroVector)
-		, bHit(false)
-		, Distance(0.0f)
-	{
-	};
-};
 
 UCLASS(Abstract)
 class ABSTRACTMUSEUM_API AAbstractMuseumActor : public AActor, public IArtInteractInterface
