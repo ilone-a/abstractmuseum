@@ -3,7 +3,7 @@
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h" 
 #include "UObject/ConstructorHelpers.h"
-#include "Components/DecalComponent.h"
+//#include "Components/DecalComponent.h"
 #include "AbstractMuseumSettings.h"
 
 AAbstractMuseumActor::AAbstractMuseumActor()
@@ -115,9 +115,7 @@ void AAbstractMuseumActor::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 }
 
-void AAbstractMuseumActor::UpdateLinetrace() {};
-
-void AAbstractMuseumActor::UpdateProjectionDecal() {};
+//void AAbstractMuseumActor::UpdateLinetrace() {};
 
 void AAbstractMuseumActor::LockCameraToThing() {
 	UE_LOG(LogTemp, Warning, TEXT("LockCamera_Parent"));

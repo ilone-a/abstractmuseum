@@ -110,14 +110,6 @@ AAbstractMuseumArt::AAbstractMuseumArt()
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to load default Plane mesh"));
 	}
-
-	ProjectionDecal = CreateDefaultSubobject<UDecalComponent>("ProjectionDecal");
-	check(ProjectionDecal);
-	ProjectionDecal->SetupAttachment(Origin);
-
-	// Set default decal properties
-	ProjectionDecal->SetVisibility(false); // Hidden by default, shown only when projecting
-
 }
 
 void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
@@ -247,6 +239,7 @@ void AAbstractMuseumArt::UnlockCameraFromThing()
 	}
 }
 //-------Walls projection linetrace-----
+/*
 void AAbstractMuseumArt::UpdateLinetrace()
 {
 	if (!Plane) return;
@@ -270,7 +263,7 @@ void AAbstractMuseumArt::UpdateLinetrace()
 		EditorProjection.Distance = FVector::Dist(Start, Hit.Location);
 		EditorProjection.bHit = true;
 	}
-}
+}*/
 
 void AAbstractMuseumArt::ApplyTexture()
 {

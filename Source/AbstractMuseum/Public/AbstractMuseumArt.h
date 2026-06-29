@@ -2,7 +2,7 @@
 
 #include "AbstractMuseumActor.h"
 #include "CoreMinimal.h"
-#include "Components/DecalComponent.h"
+//#include "Components/DecalComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "Engine/DataAsset.h"
@@ -32,8 +32,8 @@ public:
 	virtual void ScaleMeshes() override;// Scale all meshes to art picture size
 
 	//---Projection logic---
-	virtual void UpdateLinetrace() override;
-	bool bIsAttached = false;
+	//virtual void UpdateLinetrace() override;
+	//bool bIsAttached = false;
 
 
 	//--Camera--

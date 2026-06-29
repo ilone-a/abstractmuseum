@@ -195,7 +195,7 @@ int AAbstractMuseumText::GetStringMaxLen()
 {
 	return UAbstractMuseumSettings::StringMaxLen;
 }
-
+/*
 void AAbstractMuseumText::UpdateLinetrace()
 {
 	if (!TextPlane) return;
@@ -222,7 +222,7 @@ void AAbstractMuseumText::UpdateLinetrace()
 		EditorProjection.bHit = true;
 	}
 
-}
+}*/
 //---Text settings and content---
 bool AAbstractMuseumText::LoadTextFromFile(const FString& FilePath)
 {

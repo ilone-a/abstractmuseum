@@ -46,8 +46,7 @@ public:
 	void HandleCreateWidget();
 	void RestartHideTimer();
 
-	virtual void UpdateLinetrace();
-	virtual void UpdateProjectionDecal();
+	//virtual void UpdateLinetrace();
 	virtual void ScaleMeshes();
 
 	virtual void LockCameraToThing();
@@ -69,9 +68,6 @@ public:
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
 	TObjectPtr<USceneComponent> Origin;
-
-	UPROPERTY(EditAnywhere, Category = "Default")
-	TObjectPtr<UDecalComponent> ProjectionDecal;
 
 	//info
 	UPROPERTY(EditAnywhere, Category = "Info")
