@@ -149,7 +149,6 @@ void AAbstractMuseumArt::BeginPlay()
 		AMCamera->SetWorldLocation(SavedCameraLocation);
 	}
 }
-
 //-------Camera actions-----
 void AAbstractMuseumArt::CalculateCameraPositionEditor()
 {
@@ -200,7 +199,6 @@ void AAbstractMuseumArt::LockCameraToThing()
 		UE_LOG(LogTemp, Warning, TEXT("LockCamera_Child"));
 	}
 }
-
 void AAbstractMuseumArt::UnlockCameraFromThing()
 {
 	if (!PC) return;
@@ -216,9 +214,6 @@ void AAbstractMuseumArt::UnlockCameraFromThing()
 		UE_LOG(LogTemp, Warning, TEXT("UnlockCamera_Child"));
 	}
 }
-
-
-
 void AAbstractMuseumArt::ApplyTexture()
 {
 #if WITH_EDITOR
@@ -230,7 +225,6 @@ void AAbstractMuseumArt::ApplyTexture()
 	Plane->SetMaterial(0, ArtMaterialAsset);
 #endif
 }
-
 void AAbstractMuseumArt::ScaleMeshes()
 {
 	if (!Plane  || !ArtMaterialAsset)
@@ -258,7 +252,6 @@ void AAbstractMuseumArt::ScaleMeshes()
 	//UE_LOG(LogTemp, Error, TEXT("ScaleMeshes: invalid texture"));
 	return;
 }
-
 	const float AspectRatio = static_cast<float>(Width) / static_cast<float>(Height);
 	const float BaseScale = 1.0f;
 

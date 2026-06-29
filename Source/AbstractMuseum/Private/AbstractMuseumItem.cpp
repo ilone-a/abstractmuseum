@@ -23,7 +23,6 @@ static UStaticMesh* LoadDefaultItemMesh()
 		IPluginManager::Get().FindPlugin(TEXT("AbstractMuseum"))->GetBaseDir(),
 		TEXT("Config/AbstractMuseumPaths.ini")
 	);
-
 	if (GConfig)
 	{
 		GConfig->LoadFile(ConfigPath);
@@ -34,14 +33,12 @@ static UStaticMesh* LoadDefaultItemMesh()
 			ConfigPath
 		);
 	}
-
 	if (!MeshPath.IsEmpty())
 	{
 		GDefaultItemCubeMesh = Cast<UStaticMesh>(
 			StaticLoadObject(UStaticMesh::StaticClass(), nullptr, *MeshPath)
 		);
 	}
-
 	return GDefaultItemCubeMesh;
 }
 
@@ -72,9 +69,7 @@ void AAbstractMuseumItem::UpdateBoundingBox()
 {
 	if (!StaticMesh || !StaticMesh->GetStaticMesh())
 		return;
-
 	const FBoxSphereBounds Bounds = StaticMesh->GetStaticMesh()->GetBounds();
-
 	BoundingBox->SetBoxExtent(Bounds.BoxExtent);
 	BoundingBox->SetRelativeLocation(Bounds.Origin);
 }
@@ -82,9 +77,7 @@ void AAbstractMuseumItem::UpdateBoundingBox()
 void AAbstractMuseumItem::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-
 	UStaticMesh* MeshToUse = nullptr;
-
 	if (!MeshAsset.IsNull())
 	{
 		MeshToUse = MeshAsset.LoadSynchronous();
@@ -93,7 +86,6 @@ void AAbstractMuseumItem::OnConstruction(const FTransform& Transform)
 	{
 		MeshToUse = LoadDefaultItemMesh();
 	}
-
 	if (MeshToUse && StaticMesh)
 	{
 		StaticMesh->SetStaticMesh(MeshToUse);
@@ -112,9 +104,7 @@ void AAbstractMuseumItem::PostEditMove(bool bFinished)
 void AAbstractMuseumItem::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-
 	static const FName MeshAssetName = GET_MEMBER_NAME_CHECKED(AAbstractMuseumItem, MeshAsset);
-
 	if (PropertyChangedEvent.GetPropertyName() == MeshAssetName)
 	{
 		if (!MeshAsset.IsNull())

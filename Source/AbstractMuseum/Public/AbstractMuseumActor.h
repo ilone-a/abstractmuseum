@@ -63,7 +63,6 @@ protected:
 	UUserWidget* ActiveCursorWidget = nullptr;
 	UPROPERTY()
 	bool bWidgetCreated = false;
-
 	FTimerHandle HideWidgetTimer;
 	void ShowCursorWidget();
 	void HideCursorWidget();
@@ -71,7 +70,6 @@ protected:
 private:
 	UPROPERTY()
 	FString SourceFileHash;
-
 };
 
 

@@ -25,25 +25,16 @@ public:
 	virtual void SetupPlayerInputComponent(		UInputComponent* PlayerInputComponent) override;
 
 	//Input
-
-	//UFUNCTION(BlueprintImplementableEvent, Category = "Art")
 	void Move(const FInputActionValue& Value);
-
-	//UFUNCTION(BlueprintImplementableEvent, Category = "Art")
 	void Look(const FInputActionValue& Value);
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* DefaultMappingContext;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* MoveAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* LookAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* JumpAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* LeftClickAction;
 
