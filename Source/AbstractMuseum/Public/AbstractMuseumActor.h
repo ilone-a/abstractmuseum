@@ -41,12 +41,11 @@ public:
 	//--Interface
 	virtual void ArtOnInteract_Implementation() override;
 	virtual void ArtOnFocus_Implementation() override;
-	bool bOutline = false;
+
 	bool bIsInteracted = false; //sort of state machine
 	void HandleCreateWidget();
 	void RestartHideTimer();
 
-	//virtual void UpdateLinetrace();
 	virtual void ScaleMeshes();
 
 	virtual void LockCameraToThing();
@@ -60,9 +59,6 @@ public:
 	FString& GetHash() { return SourceFileHash; }
 	const FString& GetHash() const { return SourceFileHash; }
 
-	FLinetraceProjectionData EditorProjection;
-	UPROPERTY(EditAnywhere, Category = "Projection")
-	bool bEnableProjection = false;
 	virtual void CalculateCameraPositionEditor();
 
 protected:
@@ -81,11 +77,10 @@ protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
-	// Main cursor class for all child classes
+	// Cursors: Main cursor class for all child classes
+	// ActiveCursorWidget - Magnifying glass widget
 	UPROPERTY()
 	TSubclassOf<UUserWidget> CursorWidgetClass;
-
-	// ActiveCursorWidget - Magnifying glass widget
 	UPROPERTY()
 	UUserWidget* ActiveCursorWidget = nullptr;
 	UPROPERTY()

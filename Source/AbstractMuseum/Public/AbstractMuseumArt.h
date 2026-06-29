@@ -31,11 +31,6 @@ public:
 	void ApplyTexture();
 	virtual void ScaleMeshes() override;// Scale all meshes to art picture size
 
-	//---Projection logic---
-	//virtual void UpdateLinetrace() override;
-	//bool bIsAttached = false;
-
-
 	//--Camera--
 	virtual void CalculateCameraPositionEditor() override;
 	bool bCameraLocked = false;

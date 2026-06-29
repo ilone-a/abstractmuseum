@@ -115,7 +115,6 @@ void AAbstractMuseumActor::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 }
 
-//void AAbstractMuseumActor::UpdateLinetrace() {};
 
 void AAbstractMuseumActor::LockCameraToThing() {
 	UE_LOG(LogTemp, Warning, TEXT("LockCamera_Parent"));

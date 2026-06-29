@@ -22,12 +22,12 @@
 #include "Misc/FileHelper.h"
 
 static UStaticMesh* CachedArtPlaneMesh = nullptr;
-static UStaticMesh* CachedFrameCubeMesh = nullptr;
+//static UStaticMesh* CachedFrameCubeMesh = nullptr;
 
 void LoadArtAssetsOnce()
 {
 	// only if not loaded
-	if (CachedArtPlaneMesh && CachedFrameCubeMesh) return;
+	if (CachedArtPlaneMesh) return;
 
 	const FString ConfigPath = FPaths::Combine(
 		IPluginManager::Get().FindPlugin(TEXT("AbstractMuseum"))->GetBaseDir(),
@@ -55,6 +55,7 @@ void LoadArtAssetsOnce()
 	}
 
 	// --- Frame Cube Mesh ---
+	/*
 	if (!CachedFrameCubeMesh)
 	{
 		FString FrameMeshPath;
@@ -67,7 +68,7 @@ void LoadArtAssetsOnce()
 			if (!CachedFrameCubeMesh)
 				UE_LOG(LogTemp, Warning, TEXT("Failed to load ArtFrameMesh from path: %s"), *FrameMeshPath);
 		}
-	}
+	}*/
 }
 
 AAbstractMuseumArt::AAbstractMuseumArt()
@@ -141,7 +142,6 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 void AAbstractMuseumArt::BeginPlay()
 {
 	Super::BeginPlay();
-	//SetFrameVisible(false);
 
 	// PlayerController
 	PC = GetWorld()->GetFirstPlayerController();
@@ -157,13 +157,11 @@ void AAbstractMuseumArt::BeginPlay()
 		return;
 	}
 
-	//CreateDynamicMaterial();
 	if (ArtMaterialAsset)
 	{
 		Plane->SetMaterial(0, ArtMaterialAsset);
 		ScaleMeshes();
 	}
-
 
 	// camera settings
 	if (AMCamera)
@@ -238,32 +236,8 @@ void AAbstractMuseumArt::UnlockCameraFromThing()
 		UE_LOG(LogTemp, Warning, TEXT("UnlockCamera_Child"));
 	}
 }
-//-------Walls projection linetrace-----
-/*
-void AAbstractMuseumArt::UpdateLinetrace()
-{
-	if (!Plane) return;
-	EditorProjection = FLinetraceProjectionData();
 
-	FVector Start = Plane->GetComponentLocation();
-	FVector Forward = Plane->GetRightVector();
-	FVector End = Start - Forward * UAbstractMuseumSettings::ProjectionOffset;
 
-	FCollisionQueryParams Params;
-	Params.bTraceComplex = true;
-	Params.AddIgnoredActor(this);
-
-	FHitResult Hit;
-	UWorld* World = GetWorld();
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
-	{
-		EditorProjection.TraceStart = Start;
-		EditorProjection.TraceEnd = End;
-		EditorProjection.HitLocation = Hit.Location;
-		EditorProjection.Distance = FVector::Dist(Start, Hit.Location);
-		EditorProjection.bHit = true;
-	}
-}*/
 
 void AAbstractMuseumArt::ApplyTexture()
 {
@@ -311,24 +285,6 @@ void AAbstractMuseumArt::ScaleMeshes()
 	FVector PlaneScale(BaseScale * AspectRatio, BaseScale, 1.f);
 	Plane->SetRelativeScale3D(PlaneScale);
 	Plane->UpdateBounds();
-
-	//float frameZ = Frame->Bounds.BoxExtent.Z;
-	//float frameAspect = FrameDepth / frameZ;
-
-//	FVector FrameScale(
-	//	PlaneScale.X + FrameBorder,
-	//	frameAspect,
-	//	PlaneScale.Y + FrameBorder
-	//);
-
-	//Frame->SetRelativeScale3D(FrameScale);
-	//Frame->UpdateBounds();
-	//FVector t = Frame->Bounds.BoxExtent;
-	//const float MinValue = FMath::Min3(t.X, t.Y, t.Z);
-
-//	Frame->SetRelativeLocation(
-		//FVector(0.f, -(MinValue * UAbstractMuseumSettings::FrameOffset), 0.f)
-	//);
 }
 
 #if WITH_EDITOR
