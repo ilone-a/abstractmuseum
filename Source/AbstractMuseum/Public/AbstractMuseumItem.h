@@ -23,14 +23,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Default")
 	TSoftObjectPtr<UStaticMesh> MeshAsset;
 
-
 	//--Camera--
 	//virtual void CalculateCameraPositionEditor() override;
-
 	bool bCameraLocked = false;
 	virtual void LockCameraToThing() override;
 	virtual void UnlockCameraFromThing() override;
-
 	//--Camera parameters--
 	AActor* OriginalViewTarget = nullptr;
 
@@ -40,8 +37,6 @@ protected:
 	TObjectPtr<UBoxComponent> BoundingBox;
 	void UpdateBoundingBox();
 	virtual void OnConstruction(const FTransform& Transform) override;
-
-
 	APlayerController* PC = nullptr;
 	APawn* PlayerPawn = nullptr;
 

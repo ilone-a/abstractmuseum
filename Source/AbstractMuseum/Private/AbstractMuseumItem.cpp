@@ -60,8 +60,41 @@ AAbstractMuseumItem::AAbstractMuseumItem()
 	check(BoundingBox);
 	BoundingBox->SetupAttachment(Origin);
 
+	//camera
+	AMCamera = CreateDefaultSubobject<UCameraComponent>("AMCamera");
+	AMCamera->SetupAttachment(RootComponent);
+	if (AMCamera) { AMCamera->SetupAttachment(Origin); }
 }
 
+void AAbstractMuseumItem::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	UStaticMesh* MeshToUse = nullptr;
+	if (!MeshAsset.IsNull())
+	{
+		MeshToUse = MeshAsset.LoadSynchronous();
+	}
+	else
+	{
+		MeshToUse = LoadDefaultItemMesh();
+	}
+	if (MeshToUse && StaticMesh)
+	{
+		StaticMesh->SetStaticMesh(MeshToUse);
+		UpdateBoundingBox();
+	}
+}
+
+void AAbstractMuseumItem::BeginPlay()
+{
+	Super::BeginPlay();
+	PC = GetWorld()->GetFirstPlayerController();
+	if (PC)
+	{
+		PlayerPawn = PC->GetPawn();
+		OriginalViewTarget = PC->GetViewTarget();
+	}
+}
 
 void AAbstractMuseumItem::LockCameraToThing()
 {
@@ -99,16 +132,6 @@ void AAbstractMuseumItem::UnlockCameraFromThing()
 	}
 }
 
-void AAbstractMuseumItem::BeginPlay()
-{
-	Super::BeginPlay();
-	PC = GetWorld()->GetFirstPlayerController();
-	if (PC)
-	{
-		PlayerPawn = PC->GetPawn();
-		OriginalViewTarget = PC->GetViewTarget();
-	}
-}
 
 void AAbstractMuseumItem::UpdateBoundingBox()
 {
@@ -119,24 +142,6 @@ void AAbstractMuseumItem::UpdateBoundingBox()
 	BoundingBox->SetRelativeLocation(Bounds.Origin);
 }
 
-void AAbstractMuseumItem::OnConstruction(const FTransform& Transform)
-{
-	Super::OnConstruction(Transform);
-	UStaticMesh* MeshToUse = nullptr;
-	if (!MeshAsset.IsNull())
-	{
-		MeshToUse = MeshAsset.LoadSynchronous();
-	}
-	else
-	{
-		MeshToUse = LoadDefaultItemMesh();
-	}
-	if (MeshToUse && StaticMesh)
-	{
-		StaticMesh->SetStaticMesh(MeshToUse);
-		UpdateBoundingBox();
-	}
-}
 
 
 #if WITH_EDITOR
