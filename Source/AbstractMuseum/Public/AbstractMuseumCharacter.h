@@ -2,7 +2,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Blueprint/UserWidget.h"
-#include "../Public/AbstractMuseumItem.h"
+#include "../Public/AbstractMuseumActor.h"
 #include "AbstractMuseumCharacter.generated.h"
 
 class UCameraComponent;
@@ -27,6 +27,9 @@ public:
 	//Input
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	UFUNCTION()
+	void HandleInspectChanged(AAbstractMuseumActor* Actor);
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* DefaultMappingContext;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
@@ -49,10 +52,11 @@ public:
 	UUserWidget* EditModeWidget;
 
 	UPROPERTY()
-	TObjectPtr<AAbstractMuseumItem> CurrentItem;
+	TObjectPtr<AAbstractMuseumActor> CurrentInteractActor = nullptr;
+
+
 private:
 	void EditModeOn() { EditMode = true; };
 	void EditModeOff() { EditMode = false; };
 
-	AActor* LastFocusedActor = nullptr;
 };

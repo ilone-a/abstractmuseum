@@ -9,17 +9,22 @@
 #include "AbstractMuseumActor.generated.h"
 
 
+
 UCLASS(Abstract)
-class ABSTRACTMUSEUM_API AAbstractMuseumActor : public AActor, public IArtInteractInterface
+class ABSTRACTMUSEUM_API AAbstractMuseumActor : public AActor, public IAMInteractInterface
 {
 	GENERATED_BODY()
 public:
 	AAbstractMuseumActor();
-
 	//--Interface
-	virtual void ArtOnInteract_Implementation() override;
-	virtual void ArtOnFocus_Implementation() override;
+	virtual void AMOnInteract_Implementation() override;
+	virtual void AMOnFocus_Implementation() override;
+	virtual void AMBeginInspect_Implementation() override;
+	virtual void AMEndInspect_Implementation() override;
+	virtual void AMInspectLook_Implementation(const FVector2D& Delta) override;
+	virtual bool AMIsInspecting_Implementation() override;
 
+	bool bIsInspecting = false;
 	bool bIsInteracted = false; //sort of state machine
 	void HandleCreateWidget();
 	void RestartHideTimer();

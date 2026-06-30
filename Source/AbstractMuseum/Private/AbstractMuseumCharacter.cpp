@@ -75,6 +75,7 @@ void AAbstractMuseumCharacter::BeginPlay()
     {
         CreateEditModeWidget();
     }
+
 }
 
 void AAbstractMuseumCharacter::OutlineBegin(const FHitResult& Hit)
@@ -85,9 +86,9 @@ void AAbstractMuseumCharacter::OutlineBegin(const FHitResult& Hit)
         return;
     }
 
-    if (Actor->Implements<UArtInteractInterface>())
+    if (Actor->Implements<UAMInteractInterface>())
     {
-        IArtInteractInterface::Execute_ArtOnFocus(Actor);
+        IAMInteractInterface::Execute_AMOnFocus(Actor);
     }
 
     if (Actor->Implements<UEnvInteractInterface>())
@@ -161,16 +162,21 @@ void AAbstractMuseumCharacter::Move(
 
 void AAbstractMuseumCharacter::Look(const FInputActionValue& Value)
 {
-    FVector2D Input =Value.Get<FVector2D>();
-    if (CurrentItem && CurrentItem->IsOrbiting())
-    {
-        CurrentItem->AddLook(Input);
+    const FVector2D Input = Value.Get<FVector2D>();
+
+    if (CurrentInteractActor!= nullptr)
+    { 
+        IAMInteractInterface::Execute_AMInspectLook(CurrentInteractActor, Input);
         return;
     }
+
     AddControllerYawInput(Input.X);
     AddControllerPitchInput(Input.Y);
 }
-
+void AAbstractMuseumCharacter::HandleInspectChanged(AAbstractMuseumActor* Actor)
+{
+    CurrentInteractActor = Actor;
+}
 void AAbstractMuseumCharacter::OnLeftClick(const FInputActionValue& Value)
 {
     if (!EditMode)   return;
@@ -197,9 +203,22 @@ void AAbstractMuseumCharacter::OnLeftClick(const FInputActionValue& Value)
     AActor* Actor = Hit.GetActor();
     if (!Actor) return;
 
-    if (Actor->Implements<UArtInteractInterface>())
+    if (Actor->Implements<UAMInteractInterface>())
     {
-        IArtInteractInterface::Execute_ArtOnInteract(Actor);
+        IAMInteractInterface::Execute_AMOnInteract(Actor);
+        if (AAbstractMuseumActor* MuseumActor = Cast<AAbstractMuseumActor>(Actor))
+        {
+            if (CurrentInteractActor)
+            {
+                CurrentInteractActor = nullptr;
+                return;
+            }
+            else
+            { 
+            CurrentInteractActor = MuseumActor;
+            }
+
+        }
     }
     if (Actor->Implements<UEnvInteractInterface>())
     {

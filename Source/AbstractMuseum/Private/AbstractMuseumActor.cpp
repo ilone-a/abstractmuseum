@@ -24,7 +24,7 @@ AAbstractMuseumActor::AAbstractMuseumActor()
 	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 }
 
-void AAbstractMuseumActor::ArtOnInteract_Implementation()
+void AAbstractMuseumActor::AMOnInteract_Implementation()
 {
 	UE_LOG(LogTemp, Error, TEXT("INTERACTED"));
 	//flip flop state machine
@@ -40,13 +40,32 @@ void AAbstractMuseumActor::ArtOnInteract_Implementation()
 	bIsInteracted = !bIsInteracted;
 }
 
-void AAbstractMuseumActor::ArtOnFocus_Implementation()
+void AAbstractMuseumActor::AMOnFocus_Implementation()
 {
 	//Entry point
 	//if event stop triggering more than 0.1s 1) remove widget 2) let it to be created ONCE before Restart
 
 	HandleCreateWidget();// Debounce/inactivity/create widget logic
 	RestartHideTimer();// One-shot creation guard/remove widget logic
+}
+
+void AAbstractMuseumActor::AMBeginInspect_Implementation()
+{
+	bIsInspecting = true;
+}
+
+void AAbstractMuseumActor::AMEndInspect_Implementation()
+{
+	bIsInspecting = false;
+}
+
+void AAbstractMuseumActor::AMInspectLook_Implementation(const FVector2D& Delta)
+{
+}
+
+bool AAbstractMuseumActor::AMIsInspecting_Implementation()
+{
+	return bIsInspecting;
 }
 
 

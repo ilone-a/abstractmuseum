@@ -32,7 +32,9 @@ public:
 
 	bool bCameraLocked = false;
 
-	void Look(const FInputActionValue& Value);
+
+	void AMInspectLook_Implementation(const FVector2D& Delta);
+
 	virtual void LockCameraToThing() override;
 	bool IsOrbiting() const;
 	void StartOrbit();
@@ -42,7 +44,7 @@ public:
 
 
 	virtual void Tick(float DeltaTime) override;
-	void AddLook(const FVector2D& Axis);
+	//void AddLook(const FVector2D& Axis);
 	//--Camera parameters--
 	AActor* OriginalViewTarget = nullptr;
 
