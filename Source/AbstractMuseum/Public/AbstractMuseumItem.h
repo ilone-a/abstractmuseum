@@ -23,9 +23,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Default")
 	TSoftObjectPtr<UStaticMesh> MeshAsset;
 
+
+	//--Camera--
+	//virtual void CalculateCameraPositionEditor() override;
+
 	bool bCameraLocked = false;
 	virtual void LockCameraToThing() override;
 	virtual void UnlockCameraFromThing() override;
+
+	//--Camera parameters--
+	AActor* OriginalViewTarget = nullptr;
 
 protected:
 	virtual void BeginPlay() override;
@@ -33,6 +40,10 @@ protected:
 	TObjectPtr<UBoxComponent> BoundingBox;
 	void UpdateBoundingBox();
 	virtual void OnConstruction(const FTransform& Transform) override;
+
+
+	APlayerController* PC = nullptr;
+	APawn* PlayerPawn = nullptr;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

@@ -1,6 +1,8 @@
 #include "../Public/AbstractMuseumItem.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
 #include "UObject/ConstructorHelpers.h"
@@ -61,8 +63,51 @@ AAbstractMuseumItem::AAbstractMuseumItem()
 }
 
 
+void AAbstractMuseumItem::LockCameraToThing()
+{
+	if (!PC) return;
+	ShowCursorWidget();
+	//TODO what is target camera
+	OriginalViewTarget = PC->GetViewTarget();
+
+	//Art has Camera, Actor + Component
+	PC->SetViewTargetWithBlend(this, 0.5f);
+
+	// Blocking player movement to next click
+	if (auto* Char = Cast<ACharacter>(PlayerPawn))
+	{
+		Char->GetCharacterMovement()->DisableMovement();
+		bCameraLocked = true;
+		UE_LOG(LogTemp, Warning, TEXT("LockCamera_Child"));
+	}
+}
+
+void AAbstractMuseumItem::UnlockCameraFromThing()
+{
+
+	if (!PC) return;
+	// Return camera to player
+	if (OriginalViewTarget)
+		PC->SetViewTargetWithBlend(OriginalViewTarget, 0.5f);
+
+	// Unblock movement
+	if (auto* Char = Cast<ACharacter>(PlayerPawn))
+	{
+		Char->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		bCameraLocked = false;
+		UE_LOG(LogTemp, Warning, TEXT("unLockCamera_Item"));
+	}
+}
+
 void AAbstractMuseumItem::BeginPlay()
 {
+	Super::BeginPlay();
+	PC = GetWorld()->GetFirstPlayerController();
+	if (PC)
+	{
+		PlayerPawn = PC->GetPawn();
+		OriginalViewTarget = PC->GetViewTarget();
+	}
 }
 
 void AAbstractMuseumItem::UpdateBoundingBox()
