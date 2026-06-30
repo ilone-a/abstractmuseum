@@ -62,7 +62,6 @@ AAbstractMuseumArt::AAbstractMuseumArt()
 	//camera
 	AMCamera = CreateDefaultSubobject<UCameraComponent>("AMCamera");
 	AMCamera->SetupAttachment(RootComponent);
-
 	if (AMCamera) { AMCamera->SetupAttachment(Origin); }
 	//Art texture storage and placement
 	Plane = CreateDefaultSubobject<UStaticMeshComponent>("Plane");

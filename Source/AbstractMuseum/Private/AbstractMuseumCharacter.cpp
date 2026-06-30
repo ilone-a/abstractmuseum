@@ -8,6 +8,7 @@
 #include "InputActionValue.h"
 #include "ArtInteractInterface.h"
 #include "Kismet/KismetMathLibrary.h"
+
 AAbstractMuseumCharacter::AAbstractMuseumCharacter()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -43,7 +44,6 @@ void AAbstractMuseumCharacter::Tick(float DeltaSeconds)
         ECC_Visibility,
         Params
     );
-
 
     if (bHit)
     {

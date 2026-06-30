@@ -55,11 +55,6 @@ AAbstractMuseumItem::AAbstractMuseumItem()
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	check(StaticMesh);
 	StaticMesh->SetupAttachment(Origin);
-
-	BoundingBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BBox"));
-	check(BoundingBox);
-	BoundingBox->SetupAttachment(Origin);
-
 	//camera
 	AMCamera = CreateDefaultSubobject<UCameraComponent>("AMCamera");
 	AMCamera->SetupAttachment(RootComponent);
@@ -81,7 +76,6 @@ void AAbstractMuseumItem::OnConstruction(const FTransform& Transform)
 	if (MeshToUse && StaticMesh)
 	{
 		StaticMesh->SetStaticMesh(MeshToUse);
-		UpdateBoundingBox();
 	}
 }
 
@@ -131,18 +125,6 @@ void AAbstractMuseumItem::UnlockCameraFromThing()
 		UE_LOG(LogTemp, Warning, TEXT("unLockCamera_Item"));
 	}
 }
-
-
-void AAbstractMuseumItem::UpdateBoundingBox()
-{
-	if (!StaticMesh || !StaticMesh->GetStaticMesh())
-		return;
-	const FBoxSphereBounds Bounds = StaticMesh->GetStaticMesh()->GetBounds();
-	BoundingBox->SetBoxExtent(Bounds.BoxExtent);
-	BoundingBox->SetRelativeLocation(Bounds.Origin);
-}
-
-
 
 #if WITH_EDITOR
 void AAbstractMuseumItem::PostEditMove(bool bFinished)

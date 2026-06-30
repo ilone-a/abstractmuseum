@@ -33,8 +33,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
-	TObjectPtr<UBoxComponent> BoundingBox;
 	void UpdateBoundingBox();
 	virtual void OnConstruction(const FTransform& Transform) override;
 	APlayerController* PC = nullptr;
