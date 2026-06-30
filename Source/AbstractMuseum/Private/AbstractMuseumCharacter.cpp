@@ -162,6 +162,11 @@ void AAbstractMuseumCharacter::Move(
 void AAbstractMuseumCharacter::Look(const FInputActionValue& Value)
 {
     FVector2D Input =Value.Get<FVector2D>();
+    if (CurrentItem && CurrentItem->IsOrbiting())
+    {
+        CurrentItem->AddLook(Input);
+        return;
+    }
     AddControllerYawInput(Input.X);
     AddControllerPitchInput(Input.Y);
 }

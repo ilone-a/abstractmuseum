@@ -2,7 +2,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Blueprint/UserWidget.h"
-
+#include "../Public/AbstractMuseumItem.h"
 #include "AbstractMuseumCharacter.generated.h"
 
 class UCameraComponent;
@@ -47,6 +47,9 @@ public:
 	bool EditMode = true;
 	UPROPERTY()
 	UUserWidget* EditModeWidget;
+
+	UPROPERTY()
+	TObjectPtr<AAbstractMuseumItem> CurrentItem;
 private:
 	void EditModeOn() { EditMode = true; };
 	void EditModeOff() { EditMode = false; };
