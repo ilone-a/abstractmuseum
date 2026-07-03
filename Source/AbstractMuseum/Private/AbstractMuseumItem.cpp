@@ -139,12 +139,10 @@ void AAbstractMuseumItem::Tick(float DeltaTime)
 	if (!bOrbiting || !AMCamera || !StaticMesh)
 		return;
 
-	const FVector Center = StaticMesh->GetComponentLocation();
-
 	const FRotator Rot(OrbitPitch, OrbitYaw, 0.f);
-	const FVector Offset = Rot.Vector() * OrbitDistance;
-
-	const FVector CamPos = Center - Offset;
+	const FVector Center = StaticMesh->GetComponentLocation();
+	const FVector CamPos =
+		Center + Rot.Vector() * OrbitDistance;
 
 	AMCamera->SetWorldLocation(CamPos);
 	AMCamera->SetWorldRotation((Center - CamPos).Rotation());
@@ -158,7 +156,19 @@ bool AAbstractMuseumItem::IsOrbiting() const
 {
 	return bOrbiting;
 }
-void AAbstractMuseumItem::StartOrbit() {bOrbiting = true;}
+void AAbstractMuseumItem::StartOrbit() {bOrbiting = true;
+const FVector Center = StaticMesh->GetComponentLocation();
+
+const FVector Offset = AMCamera->GetComponentLocation() - Center;
+
+OrbitDistance = Offset.Length();
+
+const FRotator Rot = Offset.Rotation();
+
+OrbitYaw = Rot.Yaw;
+OrbitPitch = Rot.Pitch;
+
+}
 void AAbstractMuseumItem::StopOrbit() {bOrbiting = false;}
 
 void AAbstractMuseumItem::UnlockCameraFromThing()
