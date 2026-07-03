@@ -8,46 +8,27 @@
 #include "InfoComponent.h"
 #include "AbstractMuseumActor.generated.h"
 
-// Other base structs
-USTRUCT(BlueprintType)
-struct FLinetraceProjectionData
-{
-	GENERATED_BODY()
 
-	FVector TraceStart;
-	FVector TraceEnd;
-	FVector HitLocation;
-
-	bool bHit = false;
-
-	float Distance = 0.0f;
-	FLinetraceProjectionData()
-		: TraceStart(FVector::ZeroVector)
-		, TraceEnd(FVector::ZeroVector)
-		, HitLocation(FVector::ZeroVector)
-		, bHit(false)
-		, Distance(0.0f)
-	{
-	};
-};
 
 UCLASS(Abstract)
-class ABSTRACTMUSEUM_API AAbstractMuseumActor : public AActor, public IArtInteractInterface
+class ABSTRACTMUSEUM_API AAbstractMuseumActor : public AActor, public IAMInteractInterface
 {
 	GENERATED_BODY()
 public:
 	AAbstractMuseumActor();
-
 	//--Interface
-	virtual void ArtOnInteract_Implementation() override;
-	virtual void ArtOnFocus_Implementation() override;
-	bool bOutline = false;
+	virtual void AMOnInteract_Implementation() override;
+	virtual void AMOnFocus_Implementation() override;
+	virtual void AMBeginInspect_Implementation() override;
+	virtual void AMEndInspect_Implementation() override;
+	virtual void AMInspectLook_Implementation(const FVector2D& Delta) override;
+	virtual bool AMIsInspecting_Implementation() override;
+
+	bool bIsInspecting = false;
 	bool bIsInteracted = false; //sort of state machine
 	void HandleCreateWidget();
 	void RestartHideTimer();
 
-	virtual void UpdateLinetrace();
-	virtual void UpdateProjectionDecal();
 	virtual void ScaleMeshes();
 
 	virtual void LockCameraToThing();
@@ -61,17 +42,11 @@ public:
 	FString& GetHash() { return SourceFileHash; }
 	const FString& GetHash() const { return SourceFileHash; }
 
-	FLinetraceProjectionData EditorProjection;
-	UPROPERTY(EditAnywhere, Category = "Projection")
-	bool bEnableProjection = false;
 	virtual void CalculateCameraPositionEditor();
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
 	TObjectPtr<USceneComponent> Origin;
-
-	UPROPERTY(EditAnywhere, Category = "Default")
-	TObjectPtr<UDecalComponent> ProjectionDecal;
 
 	//info
 	UPROPERTY(EditAnywhere, Category = "Info")
@@ -85,16 +60,14 @@ protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 
-	// Main cursor class for all child classes
+	// Cursors: Main cursor class for all child classes
+	// ActiveCursorWidget - Magnifying glass widget
 	UPROPERTY()
 	TSubclassOf<UUserWidget> CursorWidgetClass;
-
-	// ActiveCursorWidget - Magnifying glass widget
 	UPROPERTY()
 	UUserWidget* ActiveCursorWidget = nullptr;
 	UPROPERTY()
 	bool bWidgetCreated = false;
-
 	FTimerHandle HideWidgetTimer;
 	void ShowCursorWidget();
 	void HideCursorWidget();
@@ -102,7 +75,6 @@ protected:
 private:
 	UPROPERTY()
 	FString SourceFileHash;
-
 };
 
 

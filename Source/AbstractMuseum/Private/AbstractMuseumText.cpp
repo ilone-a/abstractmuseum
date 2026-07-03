@@ -195,34 +195,6 @@ int AAbstractMuseumText::GetStringMaxLen()
 {
 	return UAbstractMuseumSettings::StringMaxLen;
 }
-
-void AAbstractMuseumText::UpdateLinetrace()
-{
-	if (!TextPlane) return;
-
-	EditorProjection = FLinetraceProjectionData();
-
-	FVector Start = TextPlane->GetComponentLocation();
-	FVector Forward = TextPlane->GetRightVector();
-	FVector End = Start - Forward * 1000.f;
-
-	FCollisionQueryParams Params;
-	Params.bTraceComplex = true;
-	Params.AddIgnoredActor(this);
-
-	FHitResult Hit;
-	UWorld* World = GetWorld();
-
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
-	{
-		EditorProjection.TraceStart = Start;
-		EditorProjection.TraceEnd = End;
-		EditorProjection.HitLocation = Hit.Location;
-		EditorProjection.Distance = FVector::Dist(Start, Hit.Location);
-		EditorProjection.bHit = true;
-	}
-
-}
 //---Text settings and content---
 bool AAbstractMuseumText::LoadTextFromFile(const FString& FilePath)
 {

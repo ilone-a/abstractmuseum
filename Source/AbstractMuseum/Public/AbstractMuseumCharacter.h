@@ -2,7 +2,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Blueprint/UserWidget.h"
-
+#include "../Public/AbstractMuseumActor.h"
 #include "AbstractMuseumCharacter.generated.h"
 
 class UCameraComponent;
@@ -25,25 +25,19 @@ public:
 	virtual void SetupPlayerInputComponent(		UInputComponent* PlayerInputComponent) override;
 
 	//Input
-
-	//UFUNCTION(BlueprintImplementableEvent, Category = "Art")
 	void Move(const FInputActionValue& Value);
-
-	//UFUNCTION(BlueprintImplementableEvent, Category = "Art")
 	void Look(const FInputActionValue& Value);
+	UFUNCTION()
+	void HandleInspectChanged(AAbstractMuseumActor* Actor);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* DefaultMappingContext;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* MoveAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* LookAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* JumpAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* LeftClickAction;
 
@@ -56,9 +50,13 @@ public:
 	bool EditMode = true;
 	UPROPERTY()
 	UUserWidget* EditModeWidget;
+
+	UPROPERTY()
+	TObjectPtr<AAbstractMuseumActor> CurrentInteractActor = nullptr;
+
+
 private:
 	void EditModeOn() { EditMode = true; };
 	void EditModeOff() { EditMode = false; };
 
-	AActor* LastFocusedActor = nullptr;
 };

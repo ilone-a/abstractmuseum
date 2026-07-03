@@ -21,8 +21,7 @@ protected:
 
 protected:
     FTimerHandle LogTimer;
-    UPROPERTY()
-    class AAbstractMuseumProjectionLogic* ProjectionLogic = nullptr;
+
     UPROPERTY(EditAnywhere, Category = "Input")
     UInputMappingContext* IMC_Player;
     UPROPERTY(EditAnywhere, Category = "Input")

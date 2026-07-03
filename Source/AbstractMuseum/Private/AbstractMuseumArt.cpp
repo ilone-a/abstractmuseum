@@ -1,5 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+#pragma once
 #include "AbstractMuseumArt.h"
 #include "AbstractPlayerController.h"
 #include "AbstractMuseumSettings.h"
@@ -22,12 +21,11 @@
 #include "Misc/FileHelper.h"
 
 static UStaticMesh* CachedArtPlaneMesh = nullptr;
-static UStaticMesh* CachedFrameCubeMesh = nullptr;
 
 void LoadArtAssetsOnce()
 {
 	// only if not loaded
-	if (CachedArtPlaneMesh && CachedFrameCubeMesh) return;
+	if (CachedArtPlaneMesh) return;
 
 	const FString ConfigPath = FPaths::Combine(
 		IPluginManager::Get().FindPlugin(TEXT("AbstractMuseum"))->GetBaseDir(),
@@ -38,7 +36,6 @@ void LoadArtAssetsOnce()
 		return;
 
 	GConfig->LoadFile(ConfigPath);
-
 	// --- Plane Mesh ---
 	if (!CachedArtPlaneMesh)
 	{
@@ -53,21 +50,6 @@ void LoadArtAssetsOnce()
 				UE_LOG(LogTemp, Warning, TEXT("Failed to load ArtPlaneMesh from path: %s"), *PlaneMeshPath);
 		}
 	}
-
-	// --- Frame Cube Mesh ---
-	if (!CachedFrameCubeMesh)
-	{
-		FString FrameMeshPath;
-		GConfig->GetString(TEXT("AssetPaths"), TEXT("ArtFrameMesh"), FrameMeshPath, ConfigPath);
-		if (!FrameMeshPath.IsEmpty())
-		{
-			CachedFrameCubeMesh = Cast<UStaticMesh>(
-				StaticLoadObject(UStaticMesh::StaticClass(), nullptr, *FrameMeshPath)
-			);
-			if (!CachedFrameCubeMesh)
-				UE_LOG(LogTemp, Warning, TEXT("Failed to load ArtFrameMesh from path: %s"), *FrameMeshPath);
-		}
-	}
 }
 
 AAbstractMuseumArt::AAbstractMuseumArt()
@@ -80,22 +62,17 @@ AAbstractMuseumArt::AAbstractMuseumArt()
 	//camera
 	AMCamera = CreateDefaultSubobject<UCameraComponent>("AMCamera");
 	AMCamera->SetupAttachment(RootComponent);
-
 	if (AMCamera) { AMCamera->SetupAttachment(Origin); }
-
-
 	//Art texture storage and placement
 	Plane = CreateDefaultSubobject<UStaticMeshComponent>("Plane");
 	check(Plane);
 	Plane->SetupAttachment(Origin);
-
 	//plane mesh
 	LoadArtAssetsOnce();
 
 	if (Plane && CachedArtPlaneMesh)
 	{
 		Plane->SetStaticMesh(CachedArtPlaneMesh);
-
 		Plane->SetRelativeLocation(FVector(0.0f, 0.01f, 0.0f));//fix overlay material
 		Plane->SetRenderCustomDepth(true);
 		Plane->SetTranslucentSortPriority(1);
@@ -104,28 +81,16 @@ AAbstractMuseumArt::AAbstractMuseumArt()
 		Plane->SetGenerateOverlapEvents(false); //
 		Plane->SetNotifyRigidBodyCollision(false);
 		Plane->SetCollisionResponseToAllChannels(ECR_Block);
-
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to load default Plane mesh"));
 	}
-
-	ProjectionDecal = CreateDefaultSubobject<UDecalComponent>("ProjectionDecal");
-	check(ProjectionDecal);
-	ProjectionDecal->SetupAttachment(Origin);
-
-	// Set default decal properties
-	ProjectionDecal->SetVisibility(false); // Hidden by default, shown only when projecting
-
 }
 
 void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-
-
-
 	if (!Plane)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Plane is NULL in OnConstruction"));
@@ -136,8 +101,6 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 		Plane->SetMaterial(0, ArtMaterialAsset);
 		ScaleMeshes();
 	}
-
-
 	{
 #if WITH_EDITOR
 		CalculateCameraPositionEditor();
@@ -145,12 +108,9 @@ void AAbstractMuseumArt::OnConstruction(const FTransform& Transform)
 	}
 
 }
-
 void AAbstractMuseumArt::BeginPlay()
 {
 	Super::BeginPlay();
-	//SetFrameVisible(false);
-
 	// PlayerController
 	PC = GetWorld()->GetFirstPlayerController();
 	if (PC)
@@ -164,28 +124,21 @@ void AAbstractMuseumArt::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("ArtMaterialStruct/BaseMaterial/Plane not set"));
 		return;
 	}
-
-	//CreateDynamicMaterial();
 	if (ArtMaterialAsset)
 	{
 		Plane->SetMaterial(0, ArtMaterialAsset);
 		ScaleMeshes();
 	}
-
-
 	// camera settings
 	if (AMCamera)
 	{
 		AMCamera->SetWorldLocation(SavedCameraLocation);
 	}
 }
-
 //-------Camera actions-----
 void AAbstractMuseumArt::CalculateCameraPositionEditor()
 {
-
 	const FBoxSphereBounds Bounds = Plane->Bounds;
-
 	const float HalfHeight = Bounds.BoxExtent.Z;
 	const float HalfWidth = Bounds.BoxExtent.Y;
 
@@ -230,7 +183,6 @@ void AAbstractMuseumArt::LockCameraToThing()
 		UE_LOG(LogTemp, Warning, TEXT("LockCamera_Child"));
 	}
 }
-
 void AAbstractMuseumArt::UnlockCameraFromThing()
 {
 	if (!PC) return;
@@ -246,32 +198,6 @@ void AAbstractMuseumArt::UnlockCameraFromThing()
 		UE_LOG(LogTemp, Warning, TEXT("UnlockCamera_Child"));
 	}
 }
-//-------Walls projection linetrace-----
-void AAbstractMuseumArt::UpdateLinetrace()
-{
-	if (!Plane) return;
-	EditorProjection = FLinetraceProjectionData();
-
-	FVector Start = Plane->GetComponentLocation();
-	FVector Forward = Plane->GetRightVector();
-	FVector End = Start - Forward * UAbstractMuseumSettings::ProjectionOffset;
-
-	FCollisionQueryParams Params;
-	Params.bTraceComplex = true;
-	Params.AddIgnoredActor(this);
-
-	FHitResult Hit;
-	UWorld* World = GetWorld();
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
-	{
-		EditorProjection.TraceStart = Start;
-		EditorProjection.TraceEnd = End;
-		EditorProjection.HitLocation = Hit.Location;
-		EditorProjection.Distance = FVector::Dist(Start, Hit.Location);
-		EditorProjection.bHit = true;
-	}
-}
-
 void AAbstractMuseumArt::ApplyTexture()
 {
 #if WITH_EDITOR
@@ -283,7 +209,6 @@ void AAbstractMuseumArt::ApplyTexture()
 	Plane->SetMaterial(0, ArtMaterialAsset);
 #endif
 }
-
 void AAbstractMuseumArt::ScaleMeshes()
 {
 	if (!Plane  || !ArtMaterialAsset)
@@ -311,39 +236,18 @@ void AAbstractMuseumArt::ScaleMeshes()
 	//UE_LOG(LogTemp, Error, TEXT("ScaleMeshes: invalid texture"));
 	return;
 }
-
 	const float AspectRatio = static_cast<float>(Width) / static_cast<float>(Height);
 	const float BaseScale = 1.0f;
 
 	FVector PlaneScale(BaseScale * AspectRatio, BaseScale, 1.f);
 	Plane->SetRelativeScale3D(PlaneScale);
 	Plane->UpdateBounds();
-
-	//float frameZ = Frame->Bounds.BoxExtent.Z;
-	//float frameAspect = FrameDepth / frameZ;
-
-//	FVector FrameScale(
-	//	PlaneScale.X + FrameBorder,
-	//	frameAspect,
-	//	PlaneScale.Y + FrameBorder
-	//);
-
-	//Frame->SetRelativeScale3D(FrameScale);
-	//Frame->UpdateBounds();
-	//FVector t = Frame->Bounds.BoxExtent;
-	//const float MinValue = FMath::Min3(t.X, t.Y, t.Z);
-
-//	Frame->SetRelativeLocation(
-		//FVector(0.f, -(MinValue * UAbstractMuseumSettings::FrameOffset), 0.f)
-	//);
 }
-
 #if WITH_EDITOR
 void AAbstractMuseumArt::PostEditMove(bool bFinished)
 {
 	Super::PostEditMove(bFinished);
 }
-
 void AAbstractMuseumArt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);

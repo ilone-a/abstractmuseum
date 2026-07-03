@@ -65,7 +65,7 @@ public:
 
 	int GetTextMaxLen();
 	int GetStringMaxLen();
-	void UpdateLinetrace();
+
 	void UpdateText();
 	void UpdateTextPlane();
 	void SetTextProperties(FColor Color, float Scale, UFont* TextFont);

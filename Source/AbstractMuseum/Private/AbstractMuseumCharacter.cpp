@@ -8,6 +8,7 @@
 #include "InputActionValue.h"
 #include "ArtInteractInterface.h"
 #include "Kismet/KismetMathLibrary.h"
+
 AAbstractMuseumCharacter::AAbstractMuseumCharacter()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -44,7 +45,6 @@ void AAbstractMuseumCharacter::Tick(float DeltaSeconds)
         Params
     );
 
-
     if (bHit)
     {
         OutlineBegin(Hit);
@@ -75,6 +75,7 @@ void AAbstractMuseumCharacter::BeginPlay()
     {
         CreateEditModeWidget();
     }
+
 }
 
 void AAbstractMuseumCharacter::OutlineBegin(const FHitResult& Hit)
@@ -85,9 +86,9 @@ void AAbstractMuseumCharacter::OutlineBegin(const FHitResult& Hit)
         return;
     }
 
-    if (Actor->Implements<UArtInteractInterface>())
+    if (Actor->Implements<UAMInteractInterface>())
     {
-        IArtInteractInterface::Execute_ArtOnFocus(Actor);
+        IAMInteractInterface::Execute_AMOnFocus(Actor);
     }
 
     if (Actor->Implements<UEnvInteractInterface>())
@@ -148,70 +149,43 @@ void AAbstractMuseumCharacter::SetupPlayerInputComponent(
 
     };
 }
-
-
-
 void AAbstractMuseumCharacter::Move(
     const FInputActionValue& Value)
 {
     FVector2D Input = Value.Get<FVector2D>();
-
     FRotator InRot = GetControlRotation();
-
-    FVector WDirection =
-        UKismetMathLibrary::GetRightVector(InRot);
-
-    FVector WDirection2 =
-        UKismetMathLibrary::GetForwardVector(InRot);
-
+    FVector WDirection = UKismetMathLibrary::GetRightVector(InRot);
+    FVector WDirection2 = UKismetMathLibrary::GetForwardVector(InRot);
     AddMovementInput(WDirection, Input.X);
     AddMovementInput(WDirection2, Input.Y);
-    /*
-    FVector2D Input =
-        Value.Get<FVector2D>();
-
-    AddMovementInput(
-        GetActorForwardVector(),
-        Input.Y);
-
-    AddMovementInput(
-        GetActorRightVector(),
-        Input.X);*/
 }
 
-void AAbstractMuseumCharacter::Look(
-    const FInputActionValue& Value)
+void AAbstractMuseumCharacter::Look(const FInputActionValue& Value)
 {
-    FVector2D Input =
-        Value.Get<FVector2D>();
+    const FVector2D Input = Value.Get<FVector2D>();
 
-    AddControllerYawInput(
-        Input.X);
-
-    AddControllerPitchInput(
-        Input.Y);
-}
-
-void AAbstractMuseumCharacter::OnLeftClick(
-    const FInputActionValue& Value)
-{
-    if (!EditMode)
-    {
+    if (CurrentInteractActor!= nullptr)
+    { 
+        IAMInteractInterface::Execute_AMInspectLook(CurrentInteractActor, Input);
         return;
     }
 
+    AddControllerYawInput(Input.X);
+    AddControllerPitchInput(Input.Y);
+}
+void AAbstractMuseumCharacter::HandleInspectChanged(AAbstractMuseumActor* Actor)
+{
+    CurrentInteractActor = Actor;
+}
+void AAbstractMuseumCharacter::OnLeftClick(const FInputActionValue& Value)
+{
+    if (!EditMode)   return;
     APlayerController* PC =
         Cast<APlayerController>(GetController());
-
-    if (!PC)
-    {
-        return;
-    }
-
+    if (!PC) return;
 
     FVector StartTrace = FirstPersonCamera->GetComponentLocation();
     FVector EndTrace = StartTrace + (FirstPersonCamera->GetForwardVector()) * 300.f;
-
     FHitResult Hit;
 
     FCollisionQueryParams Params;
@@ -225,20 +199,26 @@ void AAbstractMuseumCharacter::OnLeftClick(
         Params
     );
 
-    if (!bHit)
-    {
-        return;
-    }
-
+    if (!bHit) return;
     AActor* Actor = Hit.GetActor();
-    if (!Actor)
-    {
-        return;
-    }
+    if (!Actor) return;
 
-    if (Actor->Implements<UArtInteractInterface>())
+    if (Actor->Implements<UAMInteractInterface>())
     {
-        IArtInteractInterface::Execute_ArtOnInteract(Actor);
+        IAMInteractInterface::Execute_AMOnInteract(Actor);
+        if (AAbstractMuseumActor* MuseumActor = Cast<AAbstractMuseumActor>(Actor))
+        {
+            if (CurrentInteractActor)
+            {
+                CurrentInteractActor = nullptr;
+                return;
+            }
+            else
+            { 
+            CurrentInteractActor = MuseumActor;
+            }
+
+        }
     }
     if (Actor->Implements<UEnvInteractInterface>())
     {
@@ -247,41 +227,16 @@ void AAbstractMuseumCharacter::OnLeftClick(
 }
 void AAbstractMuseumCharacter::CreateEditModeWidget()
 {
-    if (EditModeWidget)
-    {
-        return;
-    }
-
-    if (!GetWorld())
-    {
-        return;
-    }
+    if (EditModeWidget) return;
+    if (!GetWorld()) return;
 
     TSubclassOf<UUserWidget> WidgetClass =
-        LoadClass<UUserWidget>(
-            nullptr,
-            TEXT("/Game/UMG/Edit_Mode_Widget.Edit_Mode_Widget_C")
-        );
+        LoadClass<UUserWidget>(nullptr,TEXT("/Game/UMG/Edit_Mode_Widget.Edit_Mode_Widget_C"));
 
-    if (!WidgetClass)
-    {
-        return;
-    }
-
-    APlayerController* PC =
-        Cast<APlayerController>(GetController());
-
-    if (!PC)
-    {
-        return;
-    }
-
-    EditModeWidget =
-        CreateWidget<UUserWidget>(
-            PC,
-            WidgetClass
-        );
-
+    if (!WidgetClass) return;
+    APlayerController* PC =Cast<APlayerController>(GetController());
+    if (!PC) return;
+    EditModeWidget =CreateWidget<UUserWidget>(PC,WidgetClass);
     if (EditModeWidget)
     {
         EditModeWidget->AddToViewport();
